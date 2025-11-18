@@ -72,7 +72,7 @@ const hslToCanvasColor = (hueDeg, saturationPercent, lightnessPercent, alpha = 1
 /* ---------- Setup ---------- */
 
 const buildSetup = () => {
-  if (fs.existsSync(buildDir)) fs.rmdirSync(buildDir, { recursive: true });
+  if (fs.existsSync(buildDir)) fs.rmSync(buildDir, { recursive: true });
   fs.mkdirSync(buildDir);
   fs.mkdirSync(`${buildDir}/json`);
   fs.mkdirSync(`${buildDir}/images`);
@@ -179,13 +179,88 @@ const addMetadata = (_dna, _edition) => {
 /* ---------- Image Loading ---------- */
 
 const loadLayerImg = async (_layer) => {
+  if (!_layer.selectedElement) {
+    throw new Error(`No selectedElement found for layer: ${_layer.name}`);
+  }
   const image = await loadImage(`${_layer.selectedElement.path}`);
   return { layer: _layer, loadedImage: image };
 };
 
 /* ---------- Collage-Aware Draw ---------- */
 
-const getLayerOpts = (layer) => {
+// Store Body mask to check Prop overlap
+let bodyMask = null;
+
+// Check if a position overlaps with Body pixels
+const checkOverlapWithBody = (x, y, width, height, angle, image) => {
+  if (!bodyMask || !image) return false;
+  
+  // Create a temporary canvas to render the prop and check its actual pixels
+  const tempCanvas = createCanvas(Math.ceil(width), Math.ceil(height));
+  const tempCtx = tempCanvas.getContext("2d");
+  
+  // Draw the prop image to the temp canvas
+  if (angle) {
+    tempCtx.save();
+    tempCtx.translate(width / 2, height / 2);
+    tempCtx.rotate(angle);
+    tempCtx.drawImage(image, -width / 2, -height / 2, width, height);
+    tempCtx.restore();
+  } else {
+    tempCtx.drawImage(image, 0, 0, width, height);
+  }
+  
+  // Get the prop's pixel data
+  const propImageData = tempCtx.getImageData(0, 0, width, height);
+  const propData = propImageData.data;
+  
+  // Check each non-transparent pixel of the prop against the body mask
+  for (let py = 0; py < height; py++) {
+    for (let px = 0; px < width; px++) {
+      const propIndex = (py * width + px) * 4;
+      const propAlpha = propData[propIndex + 3];
+      
+      // Only check pixels that are actually part of the prop (non-transparent)
+      if (propAlpha > 10) {
+        // Calculate canvas coordinates
+        let canvasX, canvasY;
+        if (angle) {
+          // Transform from prop local coordinates to canvas coordinates
+          const cx = x + width / 2;
+          const cy = y + height / 2;
+          const cos = Math.cos(angle);
+          const sin = Math.sin(angle);
+          const localX = px - width / 2;
+          const localY = py - height / 2;
+          canvasX = cx + (localX * cos - localY * sin);
+          canvasY = cy + (localX * sin + localY * cos);
+        } else {
+          canvasX = x + px;
+          canvasY = y + py;
+        }
+        
+        // Clamp to canvas bounds
+        const clampedX = Math.floor(canvasX);
+        const clampedY = Math.floor(canvasY);
+        
+        if (clampedX >= 0 && clampedX < format.width && clampedY >= 0 && clampedY < format.height) {
+          // Check if this pixel overlaps with Body
+          const maskIndex = (clampedY * format.width + clampedX) * 4;
+          if (maskIndex >= 0 && maskIndex < bodyMask.data.length) {
+            const bodyAlpha = bodyMask.data[maskIndex + 3];
+            if (bodyAlpha > 10) { // Threshold for "has body pixel"
+              return true; // Found overlap
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return false; // No overlap found
+};
+
+const getLayerOpts = (layer, bodyMaskData = null) => {
   const o = layer?.options || {};
   
   // Handle random positioning
@@ -195,14 +270,39 @@ const getLayerOpts = (layer) => {
   if (o.randomPosition) {
     const width = o.width ?? format.width;
     const height = o.height ?? format.height;
-    // Random position anywhere on canvas, allowing props to go partially off-canvas
-    x = Math.random() * format.width - width / 2;
-    y = Math.random() * format.height - height / 2;
     
-    // Apply position jitter if specified
-    if (o.positionJitter) {
-      x += (Math.random() - 0.5) * o.positionJitter;
-      y += (Math.random() - 0.5) * o.positionJitter;
+    // For Props, try to find a position that doesn't overlap with Body
+    if (layer.name === "Prop" && bodyMaskData) {
+      let attempts = 0;
+      const maxAttempts = 50; // Try up to 50 times to find a non-overlapping position
+      let foundPosition = false;
+      
+      while (attempts < maxAttempts && !foundPosition) {
+        // Random position anywhere on canvas
+        x = Math.random() * format.width - width / 2;
+        y = Math.random() * format.height - height / 2;
+        
+        // Apply position jitter if specified
+        if (o.positionJitter) {
+          x += (Math.random() - 0.5) * o.positionJitter;
+          y += (Math.random() - 0.5) * o.positionJitter;
+        }
+        
+        // Check overlap (we'll check this later in drawElement with the actual image)
+        // For now, just use this position
+        foundPosition = true;
+        attempts++;
+      }
+    } else {
+      // Random position anywhere on canvas, allowing props to go partially off-canvas
+      x = Math.random() * format.width - width / 2;
+      y = Math.random() * format.height - height / 2;
+      
+      // Apply position jitter if specified
+      if (o.positionJitter) {
+        x += (Math.random() - 0.5) * o.positionJitter;
+        y += (Math.random() - 0.5) * o.positionJitter;
+      }
     }
   } else if (o.positionJitter) {
     // Apply jitter to fixed positions
@@ -211,7 +311,7 @@ const getLayerOpts = (layer) => {
   }
   
   // Handle random scaling
-  let scale = 1.0;
+  let scale = o.scale ?? 1.0;
   if (o.randomScale && o.scaleRange) {
     const [minScale, maxScale] = o.scaleRange;
     scale = minScale + Math.random() * (maxScale - minScale);
@@ -224,22 +324,21 @@ const getLayerOpts = (layer) => {
     opacity = minOpacity + Math.random() * (maxOpacity - minOpacity);
   }
   
-  // Handle random blend modes - only use bright/colorful modes
+  // Handle random blend modes - refined, layered aesthetic
   let blend = o.blend ?? layer.blend ?? "source-over";
   if (o.randomBlend) {
     const blendModes = [
       "source-over",
       "source-over",  // higher chance of normal
-      "screen",       // brightens
-      "overlay",      // enhances contrast
+      "source-over",  // even higher chance for refined look
+      "overlay",      // enhances contrast subtly
+      "soft-light",   // gentle, refined effect
+      "multiply",     // darkens for depth
+      "screen",       // lightens subtly
       "lighten",      // keeps bright areas
-      "color-dodge",  // very bright
-      "hard-light",   // vibrant
-      "soft-light",   // gentle effect
-      "difference",   // trippy
-      "exclusion",    // colorful inversion
-      "hue",          // color shift
-      "color",        // colorize
+      "darken",       // adds depth
+      "color-burn",   // subtle darkening
+      "hard-light",   // moderate contrast
       "luminosity"    // brightness shift
     ];
     blend = blendModes[Math.floor(Math.random() * blendModes.length)];
@@ -334,7 +433,7 @@ const drawElement = (renderObj, index, layersLen) => {
     shadowOffsetX,
     shadowOffsetY,
     shadowColor,
-  } = getLayerOpts(layer);
+  } = getLayerOpts(layer, bodyMask);
 
   const jx = jitter ? (Math.random() - 0.5) * jitter : 0;
   const jy = jitter ? (Math.random() - 0.5) * jitter : 0;
@@ -344,6 +443,158 @@ const drawElement = (renderObj, index, layersLen) => {
   // Apply scale to dimensions
   const scaledWidth = width * scale;
   const scaledHeight = height * scale;
+
+  // For Props, check if position overlaps with Body and try to reposition if needed
+  if (layer.name === "Prop" && bodyMask) {
+    const isFixedPosition = !layer.options?.randomPosition;
+    let currentX = x + jx;
+    let currentY = y + jy;
+    let foundPosition = false;
+    
+    if (isFixedPosition) {
+      // For fixed positions (corners), check overlap but allow it if it's a fixed corner position
+      // We'll still check but won't reposition - corners are intentional
+      foundPosition = true; // Always allow fixed positions
+    } else {
+      // For random positions, try to find a non-overlapping position
+      let attempts = 0;
+      const maxAttempts = 100;
+      
+      while (attempts < maxAttempts) {
+        if (!checkOverlapWithBody(currentX, currentY, scaledWidth, scaledHeight, angle, loadedImage)) {
+          foundPosition = true;
+          break;
+        }
+        
+        // Try a new random position using scaled dimensions
+        currentX = Math.random() * format.width - scaledWidth / 2;
+        currentY = Math.random() * format.height - scaledHeight / 2;
+        
+        if (layer.options?.positionJitter) {
+          currentX += (Math.random() - 0.5) * layer.options.positionJitter;
+          currentY += (Math.random() - 0.5) * layer.options.positionJitter;
+        }
+        
+        attempts++;
+      }
+    }
+    
+    // If we couldn't find a non-overlapping position (and it's not fixed), skip drawing this prop
+    if (!foundPosition) {
+      return; // Skip drawing this prop
+    }
+    
+    // Use the position (fixed or found)
+    const finalX = currentX;
+    const finalY = currentY;
+    
+    // Draw with adjusted position
+    ctx.globalAlpha = opacity;
+    ctx.globalCompositeOperation = blend;
+
+    // Determine which effect to use (glow takes priority)
+    let finalShadowBlur = 0;
+    let finalShadowOffsetX = 0;
+    let finalShadowOffsetY = 0;
+    let finalShadowColor = 'transparent';
+
+    if (glowRadius > 0) {
+      finalShadowBlur = glowRadius;
+      finalShadowOffsetX = 0;
+      finalShadowOffsetY = 0;
+      finalShadowColor = glowColor;
+    } else if (shadowBlur > 0) {
+      finalShadowBlur = shadowBlur;
+      finalShadowOffsetX = shadowOffsetX;
+      finalShadowOffsetY = shadowOffsetY;
+      finalShadowColor = shadowColor;
+    }
+
+    ctx.shadowBlur = finalShadowBlur;
+    ctx.shadowOffsetX = finalShadowOffsetX;
+    ctx.shadowOffsetY = finalShadowOffsetY;
+    ctx.shadowColor = finalShadowColor;
+
+    if (!angle) {
+      ctx.drawImage(loadedImage, finalX, finalY, scaledWidth, scaledHeight);
+    } else {
+      ctx.save();
+      const cx = finalX + scaledWidth / 2;
+      const cy = finalY + scaledHeight / 2;
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+      ctx.drawImage(loadedImage, -scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight);
+      ctx.restore();
+    }
+
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.shadowColor = 'transparent';
+
+    // Apply rainbow tint if needed
+    if (rainbowTint && tintIntensity > 0) {
+      const overlayWidth = Math.max(1, Math.ceil(scaledWidth));
+      const overlayHeight = Math.max(1, Math.ceil(scaledHeight));
+      const overlayCanvas = createCanvas(overlayWidth, overlayHeight);
+      const overlayCtx = overlayCanvas.getContext("2d");
+
+      overlayCtx.drawImage(loadedImage, 0, 0, overlayWidth, overlayHeight);
+      
+      const imageData = overlayCtx.getImageData(0, 0, overlayWidth, overlayHeight);
+      const data = imageData.data;
+      const hueOffset = Math.random() * 360;
+      
+      for (let i = 0; i < data.length; i += 4) {
+        const alpha = data[i + 3];
+        if (alpha > 0) {
+          const pixelIndex = i / 4;
+          const px = pixelIndex % overlayWidth;
+          const py = Math.floor(pixelIndex / overlayWidth);
+          const gradientPos = (px / overlayWidth + py / overlayHeight) / 2;
+          const hue = (gradientPos * 360 + hueOffset) % 360;
+          const rainbowColor = hslToCanvasColor(hue, 100, 50);
+          const rgbaMatch = rainbowColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+          
+          if (rgbaMatch) {
+            const rainbowR = parseInt(rgbaMatch[1]);
+            const rainbowG = parseInt(rgbaMatch[2]);
+            const rainbowB = parseInt(rgbaMatch[3]);
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            data[i] = Math.round(r * (1 - tintIntensity) + rainbowR * tintIntensity);
+            data[i + 1] = Math.round(g * (1 - tintIntensity) + rainbowG * tintIntensity);
+            data[i + 2] = Math.round(b * (1 - tintIntensity) + rainbowB * tintIntensity);
+          }
+        }
+      }
+      
+      overlayCtx.putImageData(imageData, 0, 0);
+
+      ctx.save();
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+
+      if (!angle) {
+        ctx.drawImage(overlayCanvas, finalX, finalY, scaledWidth, scaledHeight);
+      } else {
+        const cx = finalX + scaledWidth / 2;
+        const cy = finalY + scaledHeight / 2;
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        ctx.drawImage(overlayCanvas, -scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight);
+      }
+
+      ctx.restore();
+    }
+
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
+
+    addAttributes(renderObj);
+    return; // Early return for Props
+  }
 
   ctx.globalAlpha = opacity;
   ctx.globalCompositeOperation = blend;
@@ -474,7 +725,18 @@ const drawElement = (renderObj, index, layersLen) => {
 
 /* ---------- DNA / Generation ---------- */
 
-const cleanDna = (_str) => Number(removeQueryStrings(_str).split(":").shift());
+const cleanDna = (_str) => {
+  if (!_str || typeof _str !== 'string') {
+    return NaN;
+  }
+  const cleaned = removeQueryStrings(_str);
+  const parts = cleaned.split(":");
+  if (parts.length === 0 || !parts[0]) {
+    return NaN;
+  }
+  const id = Number(parts[0]);
+  return isNaN(id) ? NaN : id;
+};
 
 const removeQueryStrings = (_dna) => {
   const query = /(\?.*$)/;
@@ -501,17 +763,47 @@ const isDnaUnique = (_DnaList = new Set(), _dna = "") =>
 
 const createDna = (_layers) => {
   let randNum = [];
-  _layers.forEach((layer) => {
-    var totalWeight = layer.elements.reduce((sum, e) => sum + e.weight, 0);
+  let dnaIndex = 0;
+  // Track selected Prop element IDs to prevent duplicates
+  const selectedPropElementIds = new Set();
+  
+  _layers.forEach((layer, layerIndex) => {
+    if (layer.elements.length === 0) {
+      console.warn(`Warning: Layer ${layer.name} has no elements, skipping in DNA creation.`);
+      return; // Skip this layer - no DNA part will be added
+    }
+    
+    // For Prop layers, filter out already-selected elements
+    let availableElements = layer.elements;
+    if (layer.name === "Prop") {
+      availableElements = layer.elements.filter(e => !selectedPropElementIds.has(e.id));
+      if (availableElements.length === 0) {
+        console.warn(`Warning: All Prop elements have been used. Using all elements as fallback.`);
+        availableElements = layer.elements; // Fallback to all elements if all are used
+        selectedPropElementIds.clear(); // Reset for this image
+      }
+    }
+    
+    var totalWeight = availableElements.reduce((sum, e) => sum + e.weight, 0);
+    if (totalWeight === 0) {
+      console.warn(`Warning: Layer ${layer.name} has elements with total weight of 0, skipping in DNA creation.`);
+      return; // Skip this layer - no DNA part will be added
+    }
     let random = Math.floor(Math.random() * totalWeight);
-    for (let i = 0; i < layer.elements.length; i++) {
-      random -= layer.elements[i].weight;
+    for (let i = 0; i < availableElements.length; i++) {
+      random -= availableElements[i].weight;
       if (random < 0) {
+        const selectedElement = availableElements[i];
         randNum.push(
-          `${layer.elements[i].id}:${layer.elements[i].filename}${
+          `${selectedElement.id}:${selectedElement.filename}${
             layer.bypassDNA ? "?bypassDNA=true" : ""
           }`
         );
+        // Track selected Prop element to prevent duplicates
+        if (layer.name === "Prop") {
+          selectedPropElementIds.add(selectedElement.id);
+        }
+        dnaIndex++;
         break;
       }
     }
@@ -519,11 +811,84 @@ const createDna = (_layers) => {
   return randNum.join(DNA_DELIMITER);
 };
 
-const constructLayerToDna = (_dna = "", _layers = []) =>
-  _layers.map((layer, index) => {
-    let selectedElement = layer.elements.find(
-      (e) => e.id == cleanDna(_dna.split(DNA_DELIMITER)[index])
-    );
+const constructLayerToDna = (_dna = "", _layers = []) => {
+  // Split and filter out empty parts (handle consecutive delimiters)
+  const dnaParts = _dna.split(DNA_DELIMITER)
+    .map(part => part.trim())
+    .filter(part => part.length > 0);
+  let dnaPartIndex = 0;
+  
+  if (debugLogs) {
+    console.log(`Constructing DNA: "${_dna}"`);
+    console.log(`DNA parts (${dnaParts.length}):`, dnaParts);
+    console.log(`Layers (${_layers.length}):`, _layers.map(l => ({ name: l.name, elementCount: l.elements.length, bypassDNA: l.bypassDNA })));
+  }
+  
+  return _layers.map((layer, layerIndex) => {
+    // Skip layers with no elements - they won't have DNA parts
+    if (layer.elements.length === 0) {
+      console.warn(`Warning: Layer ${layer.name} has no elements.`);
+      return {
+        name: layer.name,
+        blend: layer.blend,
+        opacity: layer.opacity,
+        options: layer.options,
+        selectedElement: undefined,
+        layer,
+      };
+    }
+    
+    // Check if we have a DNA part for this layer
+    if (dnaPartIndex >= dnaParts.length) {
+      console.warn(`Warning: No DNA part found for layer ${layer.name} at layer index ${layerIndex}. DNA parts: ${dnaParts.length}, Layers with elements: ${_layers.filter(l => l.elements.length > 0).length}`);
+      return {
+        name: layer.name,
+        blend: layer.blend,
+        opacity: layer.opacity,
+        options: layer.options,
+        selectedElement: undefined,
+        layer,
+      };
+    }
+    
+    const dnaPart = dnaParts[dnaPartIndex];
+    
+    // Always advance DNA index for layers with elements (DNA parts are created in order)
+    dnaPartIndex++;
+    
+    // Validate DNA part format before parsing
+    if (!dnaPart || typeof dnaPart !== 'string' || dnaPart.trim().length === 0) {
+      console.warn(`Warning: Empty or invalid DNA part for layer ${layer.name} at index ${dnaPartIndex - 1}. DNA: "${_dna}"`);
+      return {
+        name: layer.name,
+        blend: layer.blend,
+        opacity: layer.opacity,
+        options: layer.options,
+        selectedElement: undefined,
+        layer,
+      };
+    }
+    
+    const elementId = cleanDna(dnaPart);
+    
+    if (isNaN(elementId)) {
+      console.warn(`Warning: Invalid DNA part format "${dnaPart}" for layer ${layer.name}. Expected format: "id:filename" or "id:filename?bypassDNA=true". Full DNA: "${_dna}"`);
+      return {
+        name: layer.name,
+        blend: layer.blend,
+        opacity: layer.opacity,
+        options: layer.options,
+        selectedElement: undefined,
+        layer,
+      };
+    }
+    
+    let selectedElement = layer.elements.find((e) => e.id == elementId);
+    
+    if (!selectedElement) {
+      console.warn(`Warning: No element found with ID ${elementId} for layer ${layer.name}. DNA part: "${dnaPart}". Available IDs: ${layer.elements.map(e => e.id).join(', ')}`);
+    }
+    
     return {
       name: layer.name,
       blend: layer.blend,
@@ -533,6 +898,7 @@ const constructLayerToDna = (_dna = "", _layers = []) =>
       layer,
     };
   });
+};
 
 /* ---------- Save / Metadata ---------- */
 
@@ -591,9 +957,14 @@ const startCreating = async () => {
       }
 
       let results = constructLayerToDna(newDna, layers);
-      let loadedElements = results.map((layer) => loadLayerImg(layer));
+      // Filter out layers without a selectedElement before loading
+      let validResults = results.filter((layer) => layer.selectedElement !== undefined);
+      let loadedElements = validResults.map((layer) => loadLayerImg(layer));
       await Promise.all(loadedElements).then((renderObjectArray) => {
         ctx.clearRect(0, 0, format.width, format.height);
+        // Reset body mask for each new image
+        bodyMask = null;
+        
         if (gif.export) {
           hashlipsGiffer = new HashlipsGiffer(
             canvas,
@@ -609,6 +980,12 @@ const startCreating = async () => {
 
         renderObjectArray.forEach((renderObject, index) => {
           drawElement(renderObject, index, layers.length);
+          
+          // After drawing Body layer, capture the mask for Prop overlap checking
+          if (renderObject.layer.name === "Body") {
+            bodyMask = ctx.getImageData(0, 0, format.width, format.height);
+          }
+          
           if (gif.export) hashlipsGiffer.add();
         });
 

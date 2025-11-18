@@ -24,7 +24,7 @@ const solanaMetadata = {
 // If you have selected Solana then the collection starts from 0 automatically
 const layerConfigurations = [
   {
-    growEditionSizeTo: 4,
+    growEditionSizeTo: 40,
      layersOrder: [
       // full background with random rotation and scale
       { 
@@ -32,11 +32,11 @@ const layerConfigurations = [
         options: { 
           x: 0, 
           y: 0, 
-          width: 512, 
-          height: 512,
+          width: 1024, 
+          height: 1024,
           randomRotate: false,
           rotateRange: 0.3, // more extreme rotation
-          randomScale: true,
+          randomScale: false,
           scaleRange: [0.9, 1.3], // can zoom in/out
         } 
       },
@@ -45,183 +45,112 @@ const layerConfigurations = [
       { 
         name: "Body", 
         options: { 
-          x: 0, 
-          y: 0, 
-          width: 512, 
-          height: 512,
-          randomPosition: true,
+          x: 128, // Center horizontally: (1024 - 768) / 2
+          y: 128, // Center vertically: (1024 - 768) / 2
+          width: 768, 
+          height: 768,
+          randomPosition: false,
           positionJitter: 80, // can move around quite a bit
-          randomRotate: true,
+          randomRotate: false,
           rotateRange: 0.4,
-          randomScale: true,
+          randomScale: false,
           scaleRange: [0.7, 1.4],
-          randomOpacity: true,
+          randomOpacity: false,
           opacityRange: [0.7, 1.0],
-          randomBlend: true,
+          randomBlend: false,
         } 
       },
     
-      // Multiple props with extreme chaos + rainbow tinting effects
+      // Three Props placed in specific corners - no random effects
       {
         name: "Prop",
         options: {
-          randomPosition: true,
+          randomPosition: false,
+          x: 0, // Top-left corner
+          y: 0,
           width: 128,
           height: 128,
-          randomRotate: true,
-          rotateRange: Math.PI, // full 180 degree rotation range
-          randomScale: true,
-          scaleRange: [0.4, 2.0], // can be tiny or huge
-          randomOpacity: true,
-          opacityRange: [0.2, 0.8],
-          randomBlend: true,
-          rainbowTint: true, // Apply rainbow color overlay
-          tintIntensity: [0.3, 0.7], // How much color to apply
-          randomGlow: true,
-          glowRadius: [100, 300],
-          bypassDNA: true,
-        },
-      },
-      {
-        name: "Prop",
-        options: {
-          randomPosition: true,
-          width: 128,
-          height: 128,
-          randomRotate: true,
-          rotateRange: Math.PI,
-          randomScale: true,
-          scaleRange: [0.4, 2.0],
-          randomOpacity: true,
-          opacityRange: [0.2, 0.8],
-          randomBlend: true,
-          rainbowTint: true,
-          tintIntensity: [0.4, 0.8],
-          randomShadow: true,
-          shadowBlur: [100, 300],
-          bypassDNA: true,
-        },
-      },
-      {
-        name: "Prop",
-        options: {
-          randomPosition: true,
-          width: 128,
-          height: 128,
-          randomRotate: true,
-          rotateRange: Math.PI,
-          randomScale: true,
-          scaleRange: [0.4, 2.0],
-          randomOpacity: true,
-          opacityRange: [0.2, 0.8],
-          randomBlend: true,
-          rainbowTint: true,
-          tintIntensity: [0.3, 0.6],
-          randomGlow: false,
-          glowRadius: [120, 350],
-          bypassDNA: true,
-        },
-      },
-      {
-        name: "Prop",
-        options: {
-          randomPosition: true,
-          width: 128,
-          height: 128,
-          randomRotate: true,
-          rotateRange: Math.PI,
-          randomScale: true,
-          scaleRange: [0.4, 2.0],
-          randomOpacity: true,
-          opacityRange: [0.4, 0.9],
-          randomBlend: true,
+          randomRotate: false,
+          rotate: 0, // No rotation
+          randomScale: false,
+          scale: 1.75, // Fixed larger size
+          randomOpacity: false,
+          opacity: 0.6, // Fixed opacity
+          randomBlend: false,
+          blend: "source-over", // Normal blend mode
           rainbowTint: false,
-          tintIntensity: [0.5, 0.9],
-          randomShadow: true,
-          shadowBlur: [120, 350],
+          tintIntensity: [0.0, 0.0],
+          randomShadow: false,
+          shadowBlur: 0, // No shadow
           bypassDNA: true,
         },
       },
       {
         name: "Prop",
         options: {
-          randomPosition: true,
+          randomPosition: false,
+          x: 896, // Top-right corner (1024 - 128)
+          y: 0,
           width: 128,
           height: 128,
-          randomRotate: true,
-          rotateRange: Math.PI,
-          randomScale: true,
-          scaleRange: [0.4, 2.0],
-          randomOpacity: true,
-          opacityRange: [0.3, 0.8],
-          randomBlend: true,
+          randomRotate: false,
+          rotate: 0, // No rotation
+          randomScale: false,
+          scale: 1.75, // Fixed larger size
+          randomOpacity: false,
+          opacity: 0.675, // Fixed opacity
+          randomBlend: false,
+          blend: "source-over", // Normal blend mode
           rainbowTint: false,
-          tintIntensity: [0.4, 0.8],
-          randomGlow: true,
-          glowRadius: [150, 400],
-          bypassDNA: true,
-        },
-      },
-      // Add a few more props with even wilder effects
-      {
-        name: "Prop",
-        options: {
-          randomPosition: true,
-          width: 128,
-          height: 128,
-          randomRotate: true,
-          rotateRange: Math.PI,
-          randomScale: true,
-          scaleRange: [0.3, 1.5],
-          randomOpacity: true,
-          opacityRange: [0.2, 0.7], // super transparent
-          randomBlend: true,
-          rainbowTint: false,
-          tintIntensity: [0.6, 1.0], // very intense color
-          randomGlow: true,
-          glowRadius: [180, 450],
+          tintIntensity: [0.0, 0.0],
+          randomShadow: false,
+          shadowBlur: 0, // No shadow
           bypassDNA: true,
         },
       },
       {
         name: "Prop",
         options: {
-          randomPosition: true,
+          randomPosition: false,
+          x: 896, // Bottom-right corner (1024 - 128)
+          y: 896, // (1024 - 128)
           width: 128,
           height: 128,
-          randomRotate: true,
-          rotateRange: Math.PI,
-          randomScale: true,
-          scaleRange: [0.3, 1.5],
-          randomOpacity: true,
-          opacityRange: [0.2, 0.6],
-          randomBlend: true,
+          randomRotate: false,
+          rotate: 0, // No rotation
+          randomScale: false,
+          scale: 1.75, // Fixed larger size
+          randomOpacity: false,
+          opacity: 0.5, // Fixed opacity
+          randomBlend: false,
+          blend: "source-over", // Normal blend mode
           rainbowTint: false,
-          tintIntensity: [0.5, 0.9],
-          randomShadow: true,
-          shadowBlur: [150, 400],
+          tintIntensity: [0.0, 0.0],
+          randomShadow: false,
+          shadowBlur: 0, // No shadow
           bypassDNA: true,
         },
       },
       {
-        name: "Prop",
+        name: "Pokerchips",
         options: {
-          randomPosition: true,
+          randomPosition: false,
+          x: 0, // Bottom-left corner
+          y: 896, // (1024 - 128)
           width: 128,
           height: 128,
-          randomRotate: true,
-          rotateRange: Math.PI,
-          randomScale: true,
-          scaleRange: [0.3, 1.5],
-          randomOpacity: true,
-          opacityRange: [0.1, 0.5], // ghost mode
-          randomBlend: true,
+          randomRotate: false,
+          rotate: 0, // No rotation
+          randomScale: false,
+          scale: 1.0, // Normal size
+          randomOpacity: false,
+          opacity: 1.0, // Full opacity
+          randomBlend: false,
+          blend: "source-over", // Normal blend mode
           rainbowTint: false,
-          tintIntensity: [0.7, 1.0], // super vibrant
-          randomGlow: true,
-          glowRadius: [200, 500],
-          randomShadow: true,
-          shadowBlur: [180, 450],
+          tintIntensity: [0.0, 0.0],
+          randomShadow: false,
+          shadowBlur: 0, // No shadow
           bypassDNA: true,
         },
       }
@@ -234,9 +163,9 @@ const shuffleLayerConfigurations = false;
 const debugLogs = false;
 
 const format = {
-  width: 512,
-  height: 512,
-  smoothing: false,
+  width: 1024,
+  height: 1024,
+  smoothing: true,
 };
 
 const gif = {
