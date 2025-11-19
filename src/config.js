@@ -65,9 +65,9 @@ const layerConfigurations = [
       { 
         name: "Eyes", 
         options: { 
-          x: 384, // Center horizontally relative to Body: 128 + (768/2) - (256/2) = 384
+          x: 320, // Center horizontally relative to Body: 128 + (768/2) - (384/2) = 512 - 192 = 320
           y: 280, // Upper portion of Body: 128 + ~150 (upper third of 768px body)
-          width: 256, 
+          width: 384, 
           height: 256,
           randomPosition: false,
           positionJitter: 0,
@@ -103,67 +103,21 @@ const layerConfigurations = [
         } 
       },
     
-      // Three Props placed in specific corners - no random effects
+      // Prop placed at top center like a hat
       {
         name: "Prop",
         options: {
           randomPosition: false,
-          x: 0, // Top-left corner
-          y: 0,
-          width: 128,
-          height: 128,
+          x: 384, // Top center: (1024 - 256) / 2 = 384
+          y: 0, // Top of canvas
+          width: 256,
+          height: 256,
           randomRotate: false,
           rotate: 0, // No rotation
           randomScale: false,
-          scale: 1.75, // Fixed larger size
+          scale: 1.0,
           randomOpacity: false,
-          opacity: 0.6, // Fixed opacity
-          randomBlend: false,
-          blend: "source-over", // Normal blend mode
-          rainbowTint: false,
-          tintIntensity: [0.0, 0.0],
-          randomShadow: false,
-          shadowBlur: 0, // No shadow
-          bypassDNA: true,
-        },
-      },
-      {
-        name: "Prop",
-        options: {
-          randomPosition: false,
-          x: 896, // Top-right corner (1024 - 128)
-          y: 0,
-          width: 128,
-          height: 128,
-          randomRotate: false,
-          rotate: 0, // No rotation
-          randomScale: false,
-          scale: 1.75, // Fixed larger size
-          randomOpacity: false,
-          opacity: 0.675, // Fixed opacity
-          randomBlend: false,
-          blend: "source-over", // Normal blend mode
-          rainbowTint: false,
-          tintIntensity: [0.0, 0.0],
-          randomShadow: false,
-          shadowBlur: 0, // No shadow
-          bypassDNA: true,
-        },
-      },
-      {
-        name: "Prop",
-        options: {
-          randomPosition: false,
-          x: 896, // Bottom-right corner (1024 - 128)
-          y: 896, // (1024 - 128)
-          width: 128,
-          height: 128,
-          randomRotate: false,
-          rotate: 0, // No rotation
-          randomScale: false,
-          scale: 1.75, // Fixed larger size
-          randomOpacity: false,
-          opacity: 0.5, // Fixed opacity
+          opacity: 1.0, // Full opacity
           randomBlend: false,
           blend: "source-over", // Normal blend mode
           rainbowTint: false,
