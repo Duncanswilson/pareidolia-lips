@@ -61,6 +61,48 @@ const layerConfigurations = [
         } 
       },
     
+      // Eyes positioned in upper portion of face
+      { 
+        name: "Eyes", 
+        options: { 
+          x: 384, // Center horizontally relative to Body: 128 + (768/2) - (256/2) = 384
+          y: 280, // Upper portion of Body: 128 + ~150 (upper third of 768px body)
+          width: 256, 
+          height: 256,
+          randomPosition: false,
+          positionJitter: 0,
+          randomRotate: false,
+          rotateRange: 0,
+          randomScale: false,
+          scale: 1.0,
+          randomOpacity: false,
+          opacity: 1.0,
+          randomBlend: false,
+          blend: "source-over",
+        } 
+      },
+    
+      // Mouth positioned in lower portion of face
+      { 
+        name: "Mouth", 
+        options: { 
+          x: 312, // Center horizontally to match Eyes: 512 - (400/2) = 312
+          y: 550, // Positioned under Eyes (Eyes bottom at ~536, with spacing)
+          width: 400, 
+          height: 294,
+          randomPosition: false,
+          positionJitter: 0,
+          randomRotate: false,
+          rotateRange: 0,
+          randomScale: false,
+          scale: 1.0,
+          randomOpacity: false,
+          opacity: 1.0,
+          randomBlend: false,
+          blend: "source-over",
+        } 
+      },
+    
       // Three Props placed in specific corners - no random effects
       {
         name: "Prop",
