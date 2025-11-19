@@ -1,0 +1,35 @@
+{
+  "name": "Your Collection #9",
+  "description": "Remember to replace this description",
+  "image": "ipfs://NewUriToReplace/9.png",
+  "dna": "6d942e9c1a896857aa67c3ec90e791eb20ebfc1a",
+  "edition": 9,
+  "date": 1763430168043,
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "cruise"
+    },
+    {
+      "trait_type": "Body",
+      "value": "airhead"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "house"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "pbt"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "ahegao"
+    },
+    {
+      "trait_type": "Pokerchips",
+      "value": "sun"
+    }
+  ],
+  "compiler": "HashLips Art Engine (collage mod)"
+}

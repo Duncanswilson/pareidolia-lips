@@ -1,0 +1,35 @@
+{
+  "name": "Your Collection #5",
+  "description": "Remember to replace this description",
+  "image": "ipfs://NewUriToReplace/5.png",
+  "dna": "140148788f11b682dfbbe14095483ac6ae9423c6",
+  "edition": 5,
+  "date": 1763430166967,
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "cruise"
+    },
+    {
+      "trait_type": "Body",
+      "value": "sando"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "house"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "pbt"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "hellcat"
+    },
+    {
+      "trait_type": "Pokerchips",
+      "value": "opus"
+    }
+  ],
+  "compiler": "HashLips Art Engine (collage mod)"
+}

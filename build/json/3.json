@@ -1,0 +1,35 @@
+{
+  "name": "Your Collection #3",
+  "description": "Remember to replace this description",
+  "image": "ipfs://NewUriToReplace/3.png",
+  "dna": "273654b9a9f70d9d6902893b3f80f781708312f2",
+  "edition": 3,
+  "date": 1763430166368,
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "pj"
+    },
+    {
+      "trait_type": "Body",
+      "value": "67"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "house"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "kitkat"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "ahegao"
+    },
+    {
+      "trait_type": "Pokerchips",
+      "value": "mars"
+    }
+  ],
+  "compiler": "HashLips Art Engine (collage mod)"
+}

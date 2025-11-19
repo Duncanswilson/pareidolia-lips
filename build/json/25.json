@@ -1,0 +1,35 @@
+{
+  "name": "Your Collection #25",
+  "description": "Remember to replace this description",
+  "image": "ipfs://NewUriToReplace/25.png",
+  "dna": "ca88b84df6d6b1bffebe0c8c9a158aa937e8bf83",
+  "edition": 25,
+  "date": 1763430172066,
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "cruise"
+    },
+    {
+      "trait_type": "Body",
+      "value": "chair"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "ahegao"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "hellcat"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "pbt"
+    },
+    {
+      "trait_type": "Pokerchips",
+      "value": "mars"
+    }
+  ],
+  "compiler": "HashLips Art Engine (collage mod)"
+}

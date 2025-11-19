@@ -1,0 +1,35 @@
+{
+  "name": "Your Collection #7",
+  "description": "Remember to replace this description",
+  "image": "ipfs://NewUriToReplace/7.png",
+  "dna": "be7bcfa8f06d35c308481fd43b0dd0aca43ff5b4",
+  "edition": 7,
+  "date": 1763430167591,
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "pj"
+    },
+    {
+      "trait_type": "Body",
+      "value": "purse"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "house"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "kitkat"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "hellcat"
+    },
+    {
+      "trait_type": "Pokerchips",
+      "value": "bulldog"
+    }
+  ],
+  "compiler": "HashLips Art Engine (collage mod)"
+}

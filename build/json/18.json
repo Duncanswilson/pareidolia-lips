@@ -1,0 +1,35 @@
+{
+  "name": "Your Collection #18",
+  "description": "Remember to replace this description",
+  "image": "ipfs://NewUriToReplace/18.png",
+  "dna": "63a9044a5852469ebe57c02c23bf7ff292fa862d",
+  "edition": 18,
+  "date": 1763430170427,
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "white_house"
+    },
+    {
+      "trait_type": "Body",
+      "value": "chair"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "house"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "kitkat"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "hellcat"
+    },
+    {
+      "trait_type": "Pokerchips",
+      "value": "mars"
+    }
+  ],
+  "compiler": "HashLips Art Engine (collage mod)"
+}

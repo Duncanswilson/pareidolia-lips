@@ -1,0 +1,35 @@
+{
+  "name": "Your Collection #16",
+  "description": "Remember to replace this description",
+  "image": "ipfs://NewUriToReplace/16.png",
+  "dna": "3b29624a94bb97a879c282136a5b970e844ec624",
+  "edition": 16,
+  "date": 1763430169927,
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "pj"
+    },
+    {
+      "trait_type": "Body",
+      "value": "tree"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "hellcat"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "house"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "kitkat"
+    },
+    {
+      "trait_type": "Pokerchips",
+      "value": "bulldog"
+    }
+  ],
+  "compiler": "HashLips Art Engine (collage mod)"
+}

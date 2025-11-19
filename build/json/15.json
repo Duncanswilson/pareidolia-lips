@@ -1,0 +1,35 @@
+{
+  "name": "Your Collection #15",
+  "description": "Remember to replace this description",
+  "image": "ipfs://NewUriToReplace/15.png",
+  "dna": "5e6a82efe6b005b9592f86e5badf3fef5a4438b4",
+  "edition": 15,
+  "date": 1763430169675,
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "white_house"
+    },
+    {
+      "trait_type": "Body",
+      "value": "cement"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "ahegao"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "house"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "pbt"
+    },
+    {
+      "trait_type": "Pokerchips",
+      "value": "mars"
+    }
+  ],
+  "compiler": "HashLips Art Engine (collage mod)"
+}

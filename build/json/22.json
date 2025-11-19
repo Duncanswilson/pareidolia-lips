@@ -1,0 +1,35 @@
+{
+  "name": "Your Collection #22",
+  "description": "Remember to replace this description",
+  "image": "ipfs://NewUriToReplace/22.png",
+  "dna": "5d5e902e96bb3e826fc46075d3163ad190ce2b8a",
+  "edition": 22,
+  "date": 1763430171345,
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "white_house"
+    },
+    {
+      "trait_type": "Body",
+      "value": "sando"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "kitkat"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "ahegao"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "pbt"
+    },
+    {
+      "trait_type": "Pokerchips",
+      "value": "old"
+    }
+  ],
+  "compiler": "HashLips Art Engine (collage mod)"
+}

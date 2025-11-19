@@ -1,0 +1,35 @@
+{
+  "name": "Your Collection #4",
+  "description": "Remember to replace this description",
+  "image": "ipfs://NewUriToReplace/4.png",
+  "dna": "3c3f133a4d55e7a0a57d8d69eb6776fbce7a03e3",
+  "edition": 4,
+  "date": 1763430166602,
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "white_house"
+    },
+    {
+      "trait_type": "Body",
+      "value": "bag"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "hellcat"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "house"
+    },
+    {
+      "trait_type": "Prop",
+      "value": "ahegao"
+    },
+    {
+      "trait_type": "Pokerchips",
+      "value": "old"
+    }
+  ],
+  "compiler": "HashLips Art Engine (collage mod)"
+}
