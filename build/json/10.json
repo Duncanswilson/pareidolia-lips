@@ -2,29 +2,29 @@
   "name": "Your Collection #10",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/10.png",
-  "dna": "6889f1b5de64b975bd3c5fedcab53c9dc3237dfd",
+  "dna": "7da5adce2ccec74d73b97dc07941578c10e0186c",
   "edition": 10,
-  "date": 1763430168372,
+  "date": 1763528612981,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "cruise"
+      "value": "pj"
     },
     {
       "trait_type": "Body",
-      "value": "cement"
+      "value": "67"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "pepper_eyes"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "pepper_mouth"
     },
     {
       "trait_type": "Prop",
       "value": "house"
-    },
-    {
-      "trait_type": "Prop",
-      "value": "pbt"
-    },
-    {
-      "trait_type": "Prop",
-      "value": "ahegao"
     },
     {
       "trait_type": "Pokerchips",

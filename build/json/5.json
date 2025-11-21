@@ -2,33 +2,33 @@
   "name": "Your Collection #5",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/5.png",
-  "dna": "140148788f11b682dfbbe14095483ac6ae9423c6",
+  "dna": "e8872d6dce2de5da8ce3edd28ad00e57c6f4a848",
   "edition": 5,
-  "date": 1763430166967,
+  "date": 1763528610846,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "cruise"
+      "value": "tree_face"
     },
     {
       "trait_type": "Body",
-      "value": "sando"
+      "value": "67"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "pepper_eyes"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "napkin mouth"
     },
     {
       "trait_type": "Prop",
       "value": "house"
     },
     {
-      "trait_type": "Prop",
-      "value": "pbt"
-    },
-    {
-      "trait_type": "Prop",
-      "value": "hellcat"
-    },
-    {
       "trait_type": "Pokerchips",
-      "value": "opus"
+      "value": "bulldog"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

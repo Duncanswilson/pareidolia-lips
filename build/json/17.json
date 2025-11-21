@@ -2,33 +2,33 @@
   "name": "Your Collection #17",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/17.png",
-  "dna": "e4569da057fe38e47cdd661cd72d3392315c3cb4",
+  "dna": "14414af2927047e161df6a0201b3516b0b744dac",
   "edition": 17,
-  "date": 1763430170193,
+  "date": 1763528615792,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "cruise"
+      "value": "white_house"
     },
     {
       "trait_type": "Body",
-      "value": "outlet"
+      "value": "67"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "pepper_eyes"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "lips"
     },
     {
       "trait_type": "Prop",
       "value": "kitkat"
     },
     {
-      "trait_type": "Prop",
-      "value": "pbt"
-    },
-    {
-      "trait_type": "Prop",
-      "value": "ahegao"
-    },
-    {
       "trait_type": "Pokerchips",
-      "value": "mars"
+      "value": "sun"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

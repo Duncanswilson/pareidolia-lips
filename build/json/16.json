@@ -2,9 +2,9 @@
   "name": "Your Collection #16",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/16.png",
-  "dna": "3b29624a94bb97a879c282136a5b970e844ec624",
+  "dna": "35bdcf3a5d2a43f2715be63d4003d7f421aa6310",
   "edition": 16,
-  "date": 1763430169927,
+  "date": 1763528615441,
   "attributes": [
     {
       "trait_type": "Background",
@@ -12,19 +12,19 @@
     },
     {
       "trait_type": "Body",
-      "value": "tree"
+      "value": "67"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "screweyes"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "crown"
     },
     {
       "trait_type": "Prop",
-      "value": "hellcat"
-    },
-    {
-      "trait_type": "Prop",
-      "value": "house"
-    },
-    {
-      "trait_type": "Prop",
-      "value": "kitkat"
+      "value": "ahegao"
     },
     {
       "trait_type": "Pokerchips",

@@ -2,9 +2,9 @@
   "name": "Your Collection #1",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/1.png",
-  "dna": "bb9e09024729b3388d7172558b138429d97be4bc",
+  "dna": "1d048b94356fa9127df15cdcf4ee8a3d40c60b97",
   "edition": 1,
-  "date": 1763430165775,
+  "date": 1763528609106,
   "attributes": [
     {
       "trait_type": "Background",
@@ -12,19 +12,19 @@
     },
     {
       "trait_type": "Body",
-      "value": "67"
+      "value": "airhead"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "milady"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "pepper_mouth"
     },
     {
       "trait_type": "Prop",
-      "value": "kitkat"
-    },
-    {
-      "trait_type": "Prop",
-      "value": "hellcat"
-    },
-    {
-      "trait_type": "Prop",
-      "value": "ahegao"
+      "value": "house"
     },
     {
       "trait_type": "Pokerchips",

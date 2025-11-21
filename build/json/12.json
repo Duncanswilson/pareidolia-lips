@@ -2,25 +2,25 @@
   "name": "Your Collection #12",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/12.png",
-  "dna": "72ffe9f92e3ae046673ab41bfea3da1e7c347910",
+  "dna": "8cec992367ed76bc2cd987b9819e0fe8753d4aba",
   "edition": 12,
-  "date": 1763430168816,
+  "date": 1763528613877,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "pj"
+      "value": "cruise"
     },
     {
       "trait_type": "Body",
-      "value": "airhead"
+      "value": "67"
     },
     {
-      "trait_type": "Prop",
-      "value": "kitkat"
+      "trait_type": "Eyes",
+      "value": "binocular eyes"
     },
     {
-      "trait_type": "Prop",
-      "value": "house"
+      "trait_type": "Mouth",
+      "value": "napkin mouth"
     },
     {
       "trait_type": "Prop",
@@ -28,7 +28,7 @@
     },
     {
       "trait_type": "Pokerchips",
-      "value": "old"
+      "value": "sun"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

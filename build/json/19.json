@@ -2,33 +2,33 @@
   "name": "Your Collection #19",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/19.png",
-  "dna": "e56cf3e5680fc45463c093710eed2e30d9379d47",
+  "dna": "bffe1dcc25611063df248eb71902a7f52a0062fb",
   "edition": 19,
-  "date": 1763430170709,
+  "date": 1763528616767,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "pj"
+      "value": "cruise"
     },
     {
       "trait_type": "Body",
-      "value": "bag"
+      "value": "outlet"
     },
     {
-      "trait_type": "Prop",
-      "value": "pbt"
+      "trait_type": "Eyes",
+      "value": "pepper_eyes"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "pepper_mouth"
     },
     {
       "trait_type": "Prop",
       "value": "house"
     },
     {
-      "trait_type": "Prop",
-      "value": "ahegao"
-    },
-    {
       "trait_type": "Pokerchips",
-      "value": "opus"
+      "value": "sun"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

@@ -2,9 +2,9 @@
   "name": "Your Collection #26",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/26.png",
-  "dna": "49033aef30e77a2cb973253d24a1ccd8d5d0a7d7",
+  "dna": "8830b4d1b7d9af214001dba0a964644ace33ed70",
   "edition": 26,
-  "date": 1763430172395,
+  "date": 1763528619749,
   "attributes": [
     {
       "trait_type": "Background",
@@ -12,19 +12,19 @@
     },
     {
       "trait_type": "Body",
-      "value": "sando"
+      "value": "67"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "binocular eyes"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "lips"
     },
     {
       "trait_type": "Prop",
       "value": "pbt"
-    },
-    {
-      "trait_type": "Prop",
-      "value": "kitkat"
-    },
-    {
-      "trait_type": "Prop",
-      "value": "house"
     },
     {
       "trait_type": "Pokerchips",
