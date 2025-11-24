@@ -2,33 +2,77 @@
   "name": "Your Collection #3",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/3.png",
-  "dna": "fd0d14ac35cc934bf3067c5188cd0fb9853a438b",
+  "dna": "b2440a9715b722b9b804063c327d9fcbf18a061f",
   "edition": 3,
-  "date": 1763528610073,
+  "date": 1763947885580,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "pj"
+      "value": "tree_face"
     },
     {
-      "trait_type": "Body",
-      "value": "bag"
+      "trait_type": "head_base",
+      "value": "can"
     },
     {
-      "trait_type": "Eyes",
-      "value": "pepper_eyes"
+      "trait_type": "head",
+      "value": "leaf"
+    },
+    {
+      "trait_type": "head",
+      "value": "lid"
+    },
+    {
+      "trait_type": "left ear",
+      "value": "butterfly"
+    },
+    {
+      "trait_type": "right ear",
+      "value": "pallet"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "window1"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "rustedlens"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "screw"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "window1"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "outlet"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "hole2"
+    },
+    {
+      "trait_type": "hat",
+      "value": "hair"
     },
     {
       "trait_type": "Mouth",
-      "value": "pepper_mouth"
+      "value": "glasscrack"
+    },
+    {
+      "trait_type": "nose",
+      "value": "bean"
     },
     {
       "trait_type": "Prop",
-      "value": "pbt"
+      "value": "xavier"
     },
     {
       "trait_type": "Pokerchips",
-      "value": "bulldog"
+      "value": "old"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

@@ -191,6 +191,79 @@ const loadLayerImg = async (_layer) => {
 // Store Body mask to check Prop overlap
 let bodyMask = null;
 
+// Track rendered layers for dynamic positioning
+// Format: { layerName: { x, y, width, height, centerX, centerY, bottom, right, bounds: { minX, minY, maxX, maxY, centerX, centerY, top, bottom, left, right } } }
+let renderedLayers = {};
+
+// Calculate bounding box of non-transparent pixels in an image
+const getImageBounds = (image, alphaThreshold = 10) => {
+  if (!image) return null;
+  
+  const tempCanvas = createCanvas(image.width, image.height);
+  const tempCtx = tempCanvas.getContext("2d");
+  tempCtx.drawImage(image, 0, 0);
+  
+  const imageData = tempCtx.getImageData(0, 0, image.width, image.height);
+  const data = imageData.data;
+  
+  let minX = image.width;
+  let minY = image.height;
+  let maxX = 0;
+  let maxY = 0;
+  let hasPixels = false;
+  
+  for (let y = 0; y < image.height; y++) {
+    for (let x = 0; x < image.width; x++) {
+      const index = (y * image.width + x) * 4;
+      const alpha = data[index + 3];
+      
+      if (alpha > alphaThreshold) {
+        hasPixels = true;
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+  
+  if (!hasPixels) {
+    // If no pixels found, return full image bounds
+    return {
+      minX: 0,
+      minY: 0,
+      maxX: image.width,
+      maxY: image.height,
+      width: image.width,
+      height: image.height,
+      centerX: image.width / 2,
+      centerY: image.height / 2,
+      top: 0,
+      bottom: image.height,
+      left: 0,
+      right: image.width,
+    };
+  }
+  
+  const width = maxX - minX + 1;
+  const height = maxY - minY + 1;
+  
+  return {
+    minX,
+    minY,
+    maxX: maxX + 1, // Make it exclusive
+    maxY: maxY + 1, // Make it exclusive
+    width,
+    height,
+    centerX: minX + width / 2,
+    centerY: minY + height / 2,
+    top: minY,
+    bottom: maxY,
+    left: minX,
+    right: maxX,
+  };
+};
+
 // Check if a position overlaps with Body pixels
 const checkOverlapWithBody = (x, y, width, height, angle, image) => {
   if (!bodyMask || !image) return false;
@@ -260,16 +333,344 @@ const checkOverlapWithBody = (x, y, width, height, angle, image) => {
   return false; // No overlap found
 };
 
-const getLayerOpts = (layer, bodyMaskData = null) => {
+const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLayersMap = {}) => {
   const o = layer?.options || {};
   
-  // Handle random positioning
+  // Use actual image dimensions if available, otherwise use config dimensions
+  let actualWidth = o.width ?? format.width;
+  let actualHeight = o.height ?? format.height;
+  
+  if (loadedImage) {
+    // If useActualDimensions is true, use the image's natural size
+    if (o.useActualDimensions === true) {
+      actualWidth = loadedImage.width;
+      actualHeight = loadedImage.height;
+      
+      // Apply max constraints if specified (maintains aspect ratio)
+      if (o.maxWidth && actualWidth > o.maxWidth) {
+        const scale = o.maxWidth / actualWidth;
+        actualWidth = o.maxWidth;
+        actualHeight = actualHeight * scale;
+      }
+      if (o.maxHeight && actualHeight > o.maxHeight) {
+        const scale = o.maxHeight / actualHeight;
+        actualHeight = o.maxHeight;
+        actualWidth = actualWidth * scale;
+      }
+    } else if (o.maintainAspectRatio && o.width && o.height) {
+      // If maintainAspectRatio is true (and not using actual dimensions),
+      // scale to fit the configured size while maintaining aspect
+      const imageAspect = loadedImage.width / loadedImage.height;
+      const configAspect = o.width / o.height;
+      if (imageAspect > configAspect) {
+        // Image is wider - fit to width
+        actualHeight = o.width / imageAspect;
+        actualWidth = o.width;
+      } else {
+        // Image is taller - fit to height
+        actualWidth = o.height * imageAspect;
+        actualHeight = o.height;
+      }
+    }
+  }
+  
+  // Handle layer references for dynamic positioning
   let x = o.x ?? 0;
   let y = o.y ?? 0;
   
+  // If anchorTo is specified, position relative to that layer
+  if (o.anchorTo && renderedLayersMap[o.anchorTo]) {
+    const anchorLayer = renderedLayersMap[o.anchorTo];
+    const anchorPoint = o.anchorPoint || 'center';
+    const useBounds = o.useBounds !== false; // Default to true - use bounding box if available
+    
+    // Determine if we should use bounding box or image bounds
+    const useBoundingBox = useBounds && anchorLayer.bounds;
+    const bounds = useBoundingBox ? anchorLayer.bounds : null;
+    
+    let anchorX, anchorY;
+    
+    // Calculate anchor point - prefer bounding box if available and useBounds is true
+    if (useBoundingBox && bounds) {
+      // Use bounding box coordinates (relative to image, need to add layer position)
+      const scaleX = anchorLayer.width / (anchorLayer.originalWidth || anchorLayer.width);
+      const scaleY = anchorLayer.height / (anchorLayer.originalHeight || anchorLayer.height);
+      
+      switch (anchorPoint) {
+        case 'top-left':
+        case 'bounds-top-left':
+          anchorX = anchorLayer.x + bounds.left * scaleX;
+          anchorY = anchorLayer.y + bounds.top * scaleY;
+          break;
+        case 'top-right':
+        case 'bounds-top-right':
+          anchorX = anchorLayer.x + bounds.right * scaleX;
+          anchorY = anchorLayer.y + bounds.top * scaleY;
+          break;
+        case 'bottom-left':
+        case 'bounds-bottom-left':
+          anchorX = anchorLayer.x + bounds.left * scaleX;
+          anchorY = anchorLayer.y + bounds.bottom * scaleY;
+          break;
+        case 'bottom-right':
+        case 'bounds-bottom-right':
+          anchorX = anchorLayer.x + bounds.right * scaleX;
+          anchorY = anchorLayer.y + bounds.bottom * scaleY;
+          break;
+        case 'top':
+        case 'bounds-top':
+          anchorX = anchorLayer.x + bounds.centerX * scaleX;
+          anchorY = anchorLayer.y + bounds.top * scaleY;
+          break;
+        case 'bottom':
+        case 'bounds-bottom':
+          anchorX = anchorLayer.x + bounds.centerX * scaleX;
+          anchorY = anchorLayer.y + bounds.bottom * scaleY;
+          break;
+        case 'left':
+        case 'bounds-left':
+          anchorX = anchorLayer.x + bounds.left * scaleX;
+          anchorY = anchorLayer.y + bounds.centerY * scaleY;
+          break;
+        case 'right':
+        case 'bounds-right':
+          anchorX = anchorLayer.x + bounds.right * scaleX;
+          anchorY = anchorLayer.y + bounds.centerY * scaleY;
+          break;
+        case 'center':
+        case 'bounds-center':
+        default:
+          anchorX = anchorLayer.x + bounds.centerX * scaleX;
+          anchorY = anchorLayer.y + bounds.centerY * scaleY;
+          break;
+      }
+    } else {
+      // Use image bounds (original behavior)
+      switch (anchorPoint) {
+        case 'top-left':
+          anchorX = anchorLayer.x;
+          anchorY = anchorLayer.y;
+          break;
+        case 'top-right':
+          anchorX = anchorLayer.right;
+          anchorY = anchorLayer.y;
+          break;
+        case 'bottom-left':
+          anchorX = anchorLayer.x;
+          anchorY = anchorLayer.bottom;
+          break;
+        case 'bottom-right':
+          anchorX = anchorLayer.right;
+          anchorY = anchorLayer.bottom;
+          break;
+        case 'top':
+          anchorX = anchorLayer.centerX;
+          anchorY = anchorLayer.y;
+          break;
+        case 'bottom':
+          anchorX = anchorLayer.centerX;
+          anchorY = anchorLayer.bottom;
+          break;
+        case 'left':
+          anchorX = anchorLayer.x;
+          anchorY = anchorLayer.centerY;
+          break;
+        case 'right':
+          anchorX = anchorLayer.right;
+          anchorY = anchorLayer.centerY;
+          break;
+        case 'center':
+        default:
+          anchorX = anchorLayer.centerX;
+          anchorY = anchorLayer.centerY;
+          break;
+      }
+    }
+    
+    // Calculate position relative to anchor
+    // offsetX/Y are offsets from the anchor point
+    const offsetX = o.offsetX ?? 0;
+    const offsetY = o.offsetY ?? 0;
+    
+    // align determines how this layer aligns to the anchor point
+    const align = o.align || 'center';
+    const useBoundsForAlign = o.useBounds !== false && loadedImage; // Use bounds for alignment if available
+    
+    // Get bounding box for current layer if we're using bounds-based alignment
+    let currentBounds = null;
+    if (useBoundsForAlign && loadedImage) {
+      currentBounds = getImageBounds(loadedImage);
+    }
+    
+    // Calculate alignment offset based on whether we're using bounds or image edges
+    let alignOffsetX = 0;
+    let alignOffsetY = 0;
+    
+    if (useBoundsForAlign && currentBounds) {
+      // Use bounding box for alignment
+      const scaleX = actualWidth / loadedImage.width;
+      const scaleY = actualHeight / loadedImage.height;
+      
+      // The alignment offset positions the image so that the specified bounding box point
+      // ends up at the anchor point. We calculate the position of the bounding box point
+      // relative to the image's top-left corner, then negate it.
+      
+      switch (align) {
+        case 'top-left':
+        case 'bounds-top-left':
+          alignOffsetX = -currentBounds.left * scaleX;
+          alignOffsetY = -currentBounds.top * scaleY;
+          break;
+        case 'top-right':
+        case 'bounds-top-right':
+          alignOffsetX = -currentBounds.right * scaleX;
+          alignOffsetY = -currentBounds.top * scaleY;
+          break;
+        case 'bottom-left':
+        case 'bounds-bottom-left':
+          alignOffsetX = -currentBounds.left * scaleX;
+          alignOffsetY = -currentBounds.bottom * scaleY;
+          break;
+        case 'bottom-right':
+        case 'bounds-bottom-right':
+          alignOffsetX = -currentBounds.right * scaleX;
+          alignOffsetY = -currentBounds.bottom * scaleY;
+          break;
+        case 'top':
+        case 'bounds-top':
+          alignOffsetX = -currentBounds.centerX * scaleX;
+          alignOffsetY = -currentBounds.top * scaleY;
+          break;
+        case 'bottom':
+        case 'bounds-bottom':
+          alignOffsetX = -currentBounds.centerX * scaleX;
+          alignOffsetY = -currentBounds.bottom * scaleY;
+          break;
+        case 'left':
+        case 'bounds-left':
+          alignOffsetX = -currentBounds.left * scaleX;
+          alignOffsetY = -currentBounds.centerY * scaleY;
+          break;
+        case 'right':
+        case 'bounds-right':
+          alignOffsetX = -currentBounds.right * scaleX;
+          alignOffsetY = -currentBounds.centerY * scaleY;
+          break;
+        case 'center':
+        case 'bounds-center':
+        default:
+          alignOffsetX = -currentBounds.centerX * scaleX;
+          alignOffsetY = -currentBounds.centerY * scaleY;
+          break;
+      }
+    } else {
+      // Use image edges for alignment (original behavior)
+      switch (align) {
+        case 'top-left':
+          alignOffsetX = 0;
+          alignOffsetY = 0;
+          break;
+        case 'top-right':
+          alignOffsetX = -actualWidth;
+          alignOffsetY = 0;
+          break;
+        case 'bottom-left':
+          alignOffsetX = 0;
+          alignOffsetY = -actualHeight;
+          break;
+        case 'bottom-right':
+          alignOffsetX = -actualWidth;
+          alignOffsetY = -actualHeight;
+          break;
+        case 'top':
+          alignOffsetX = -actualWidth / 2;
+          alignOffsetY = 0;
+          break;
+        case 'bottom':
+          alignOffsetX = -actualWidth / 2;
+          alignOffsetY = -actualHeight;
+          break;
+        case 'left':
+          alignOffsetX = 0;
+          alignOffsetY = -actualHeight / 2;
+          break;
+        case 'right':
+          alignOffsetX = -actualWidth;
+          alignOffsetY = -actualHeight / 2;
+          break;
+        case 'center':
+        default:
+          alignOffsetX = -actualWidth / 2;
+          alignOffsetY = -actualHeight / 2;
+          break;
+      }
+    }
+    
+    // Final position = anchor point + alignment offset + user offset
+    x = anchorX + alignOffsetX + offsetX;
+    y = anchorY + alignOffsetY + offsetY;
+  }
+  
+  // Constrain to bounds if specified (e.g., keep features within head's bounding box)
+  if (o.constrainToBounds && renderedLayersMap[o.constrainToBounds]) {
+    const constraintLayer = renderedLayersMap[o.constrainToBounds];
+    const useConstraintBounds = constraintLayer.bounds;
+    
+    if (useConstraintBounds) {
+      // Get the constraint layer's bounding box in canvas coordinates
+      const scaleX = constraintLayer.width / (constraintLayer.originalWidth || constraintLayer.width);
+      const scaleY = constraintLayer.height / (constraintLayer.originalHeight || constraintLayer.height);
+      
+      const constraintLeft = constraintLayer.x + constraintLayer.bounds.left * scaleX;
+      const constraintTop = constraintLayer.y + constraintLayer.bounds.top * scaleY;
+      const constraintRight = constraintLayer.x + constraintLayer.bounds.right * scaleX;
+      const constraintBottom = constraintLayer.y + constraintLayer.bounds.bottom * scaleY;
+      
+      // Get current layer's bounding box if available, otherwise use image edges
+      let currentBounds = null;
+      if (loadedImage) {
+        currentBounds = getImageBounds(loadedImage);
+      }
+      
+      let layerLeft, layerTop, layerRight, layerBottom;
+      
+      if (currentBounds && o.useBounds !== false) {
+        // Use bounding box for constraint checking
+        const layerScaleX = actualWidth / loadedImage.width;
+        const layerScaleY = actualHeight / loadedImage.height;
+        layerLeft = x + currentBounds.left * layerScaleX;
+        layerTop = y + currentBounds.top * layerScaleY;
+        layerRight = x + currentBounds.right * layerScaleX;
+        layerBottom = y + currentBounds.bottom * layerScaleY;
+      } else {
+        // Use image edges for constraint checking
+        layerLeft = x;
+        layerTop = y;
+        layerRight = x + actualWidth;
+        layerBottom = y + actualHeight;
+      }
+      
+      // Adjust position to keep within bounds
+      if (layerLeft < constraintLeft) {
+        x += constraintLeft - layerLeft;
+      }
+      if (layerTop < constraintTop) {
+        y += constraintTop - layerTop;
+      }
+      if (layerRight > constraintRight) {
+        x -= layerRight - constraintRight;
+      }
+      if (layerBottom > constraintBottom) {
+        y -= layerBottom - constraintBottom;
+      }
+    }
+  }
+  
+  // Handle random positioning
+  
   if (o.randomPosition) {
-    const width = o.width ?? format.width;
-    const height = o.height ?? format.height;
+    const width = actualWidth;
+    const height = actualHeight;
     
     // For Props, try to find a position that doesn't overlap with Body
     if (layer.name === "Prop" && bodyMaskData) {
@@ -389,8 +790,8 @@ const getLayerOpts = (layer, bodyMaskData = null) => {
   return {
     x,
     y,
-    width: o.width ?? format.width,
-    height: o.height ?? format.height,
+    width: actualWidth,
+    height: actualHeight,
     opacity,
     blend,
     jitter: o.jitter ?? 0,
@@ -412,6 +813,16 @@ const getLayerOpts = (layer, bodyMaskData = null) => {
 
 const drawElement = (renderObj, index, layersLen) => {
   const { layer, loadedImage } = renderObj;
+  
+  // Use pre-calculated layer options if available, otherwise calculate them
+  let layerOpts;
+  if (renderObj.layerOpts) {
+    layerOpts = renderObj.layerOpts;
+  } else {
+    layerOpts = getLayerOpts(layer, bodyMask, loadedImage, renderedLayers);
+    renderObj.layerOpts = layerOpts; // Store for reuse
+  }
+  
   const {
     x,
     y,
@@ -433,10 +844,15 @@ const drawElement = (renderObj, index, layersLen) => {
     shadowOffsetX,
     shadowOffsetY,
     shadowColor,
-  } = getLayerOpts(layer, bodyMask);
+  } = layerOpts;
 
-  const jx = jitter ? (Math.random() - 0.5) * jitter : 0;
-  const jy = jitter ? (Math.random() - 0.5) * jitter : 0;
+  // Calculate jitter once and store it for layer tracking
+  if (!renderObj.jitterX && !renderObj.jitterY && jitter) {
+    renderObj.jitterX = (Math.random() - 0.5) * jitter;
+    renderObj.jitterY = (Math.random() - 0.5) * jitter;
+  }
+  const jx = renderObj.jitterX || 0;
+  const jy = renderObj.jitterY || 0;
   const randAngle = randomRotate ? (Math.random() - 0.5) * 2 * rotateRange : 0;
   const angle = rotate + randAngle;
 
@@ -766,11 +1182,30 @@ const createDna = (_layers) => {
   let dnaIndex = 0;
   // Track selected Prop element IDs to prevent duplicates
   const selectedPropElementIds = new Set();
+  // Track selected head element IDs to prevent duplicates across multiple head layers
+  const selectedHeadElementIds = new Set();
+  // Track selected left eye element IDs to prevent duplicates across multiple left eye layers
+  const selectedLeftEyeElementIds = new Set();
+  // Track selected right eye element IDs to prevent duplicates across multiple right eye layers
+  const selectedRightEyeElementIds = new Set();
+  // Track selected mouth element IDs to prevent duplicates across multiple mouth layers
+  const selectedMouthElementIds = new Set();
   
   _layers.forEach((layer, layerIndex) => {
     if (layer.elements.length === 0) {
       console.warn(`Warning: Layer ${layer.name} has no elements, skipping in DNA creation.`);
       return; // Skip this layer - no DNA part will be added
+    }
+    
+    // Check if layer has a probability setting (conditional layer)
+    // If probability is set, randomly skip this layer based on the probability
+    const layerOptions = layer.options || {};
+    if (layerOptions.probability !== undefined && layerOptions.probability !== null) {
+      const probability = Math.max(0, Math.min(1, layerOptions.probability)); // Clamp between 0 and 1
+      if (Math.random() > probability) {
+        // Skip this layer - it won't appear in this generation
+        return;
+      }
     }
     
     // For Prop layers, filter out already-selected elements
@@ -781,6 +1216,46 @@ const createDna = (_layers) => {
         console.warn(`Warning: All Prop elements have been used. Using all elements as fallback.`);
         availableElements = layer.elements; // Fallback to all elements if all are used
         selectedPropElementIds.clear(); // Reset for this image
+      }
+    }
+    
+    // For head layers, filter out already-selected elements (sampling without replacement)
+    if (layer.name === "head") {
+      availableElements = layer.elements.filter(e => !selectedHeadElementIds.has(e.id));
+      if (availableElements.length === 0) {
+        console.warn(`Warning: All head elements have been used. Using all elements as fallback.`);
+        availableElements = layer.elements; // Fallback to all elements if all are used
+        selectedHeadElementIds.clear(); // Reset for this image
+      }
+    }
+    
+    // For left eye layers, filter out already-selected elements (sampling without replacement)
+    if (layer.name === "left eye") {
+      availableElements = layer.elements.filter(e => !selectedLeftEyeElementIds.has(e.id));
+      if (availableElements.length === 0) {
+        console.warn(`Warning: All left eye elements have been used. Using all elements as fallback.`);
+        availableElements = layer.elements; // Fallback to all elements if all are used
+        selectedLeftEyeElementIds.clear(); // Reset for this image
+      }
+    }
+    
+    // For right eye layers, filter out already-selected elements (sampling without replacement)
+    if (layer.name === "right eye") {
+      availableElements = layer.elements.filter(e => !selectedRightEyeElementIds.has(e.id));
+      if (availableElements.length === 0) {
+        console.warn(`Warning: All right eye elements have been used. Using all elements as fallback.`);
+        availableElements = layer.elements; // Fallback to all elements if all are used
+        selectedRightEyeElementIds.clear(); // Reset for this image
+      }
+    }
+    
+    // For mouth layers, filter out already-selected elements (sampling without replacement)
+    if (layer.name === "Mouth") {
+      availableElements = layer.elements.filter(e => !selectedMouthElementIds.has(e.id));
+      if (availableElements.length === 0) {
+        console.warn(`Warning: All mouth elements have been used. Using all elements as fallback.`);
+        availableElements = layer.elements; // Fallback to all elements if all are used
+        selectedMouthElementIds.clear(); // Reset for this image
       }
     }
     
@@ -802,6 +1277,22 @@ const createDna = (_layers) => {
         // Track selected Prop element to prevent duplicates
         if (layer.name === "Prop") {
           selectedPropElementIds.add(selectedElement.id);
+        }
+        // Track selected head element to prevent duplicates across multiple head layers
+        if (layer.name === "head") {
+          selectedHeadElementIds.add(selectedElement.id);
+        }
+        // Track selected left eye element to prevent duplicates across multiple left eye layers
+        if (layer.name === "left eye") {
+          selectedLeftEyeElementIds.add(selectedElement.id);
+        }
+        // Track selected right eye element to prevent duplicates across multiple right eye layers
+        if (layer.name === "right eye") {
+          selectedRightEyeElementIds.add(selectedElement.id);
+        }
+        // Track selected mouth element to prevent duplicates across multiple mouth layers
+        if (layer.name === "Mouth") {
+          selectedMouthElementIds.add(selectedElement.id);
         }
         dnaIndex++;
         break;
@@ -838,9 +1329,51 @@ const constructLayerToDna = (_dna = "", _layers = []) => {
       };
     }
     
+    // Handle layers with probability 0.0
+    // If probability is 0.0 now, skip the layer (same as createDna)
+    // However, if DNA contains a part for it (from when probability was > 0.0), consume it to maintain alignment
+    const layerOptions = layer.options || {};
+    if (layerOptions.probability !== undefined && layerOptions.probability !== null) {
+      const probability = Math.max(0, Math.min(1, layerOptions.probability)); // Clamp between 0 and 1
+      if (probability === 0) {
+        // Skip this layer - it won't appear in this generation (same as createDna)
+        // But if DNA part exists and matches this layer (from when probability was > 0.0), consume it
+        if (dnaPartIndex < dnaParts.length) {
+          const dnaPart = dnaParts[dnaPartIndex];
+          const elementId = cleanDna(dnaPart);
+          // Check if this DNA part belongs to this layer by checking if the element ID exists
+          const matchingElement = layer.elements.find((e) => e.id == elementId);
+          if (matchingElement) {
+            // This DNA part belongs to this layer - consume it to maintain alignment
+            dnaPartIndex++;
+          }
+          // If it doesn't match, the DNA was created with probability 0.0, so don't consume it
+        }
+        // Skip this layer - it won't appear in this generation
+        return {
+          name: layer.name,
+          blend: layer.blend,
+          opacity: layer.opacity,
+          options: layer.options,
+          selectedElement: undefined,
+          layer,
+        };
+      }
+    }
+    
     // Check if we have a DNA part for this layer
     if (dnaPartIndex >= dnaParts.length) {
-      console.warn(`Warning: No DNA part found for layer ${layer.name} at layer index ${layerIndex}. DNA parts: ${dnaParts.length}, Layers with elements: ${_layers.filter(l => l.elements.length > 0).length}`);
+      // Count layers that should have DNA parts (exclude probability 0.0 and empty layers)
+      const layersWithDnaParts = _layers.filter(l => {
+        if (l.elements.length === 0) return false;
+        const opts = l.options || {};
+        if (opts.probability !== undefined && opts.probability !== null) {
+          const prob = Math.max(0, Math.min(1, opts.probability));
+          if (prob === 0) return false;
+        }
+        return true;
+      }).length;
+      console.warn(`Warning: No DNA part found for layer ${layer.name} at layer index ${layerIndex}. DNA parts: ${dnaParts.length}, Layers that should have DNA parts: ${layersWithDnaParts}`);
       return {
         name: layer.name,
         blend: layer.blend,
@@ -962,8 +1495,9 @@ const startCreating = async () => {
       let loadedElements = validResults.map((layer) => loadLayerImg(layer));
       await Promise.all(loadedElements).then((renderObjectArray) => {
         ctx.clearRect(0, 0, format.width, format.height);
-        // Reset body mask for each new image
+        // Reset body mask and rendered layers for each new image
         bodyMask = null;
+        renderedLayers = {};
         
         if (gif.export) {
           hashlipsGiffer = new HashlipsGiffer(
@@ -979,7 +1513,42 @@ const startCreating = async () => {
         if (background.generate) drawBackground();
 
         renderObjectArray.forEach((renderObject, index) => {
+          // Get layer options once and store them for reuse
+          if (!renderObject.layerOpts) {
+            renderObject.layerOpts = getLayerOpts(renderObject.layer, bodyMask, renderObject.loadedImage, renderedLayers);
+          }
+          
           drawElement(renderObject, index, layers.length);
+          
+          // Track this layer's position and dimensions for future layer references
+          // Use the same jitter values that were calculated in drawElement
+          const layerOpts = renderObject.layerOpts;
+          const jx = renderObject.jitterX || 0;
+          const jy = renderObject.jitterY || 0;
+          const scaledWidth = layerOpts.width * layerOpts.scale;
+          const scaledHeight = layerOpts.height * layerOpts.scale;
+          const finalX = layerOpts.x + jx;
+          const finalY = layerOpts.y + jy;
+          
+          // Calculate bounding box of non-transparent pixels
+          let bounds = null;
+          if (renderObject.loadedImage) {
+            bounds = getImageBounds(renderObject.loadedImage);
+          }
+          
+          renderedLayers[renderObject.layer.name] = {
+            x: finalX,
+            y: finalY,
+            width: scaledWidth,
+            height: scaledHeight,
+            originalWidth: renderObject.loadedImage ? renderObject.loadedImage.width : scaledWidth,
+            originalHeight: renderObject.loadedImage ? renderObject.loadedImage.height : scaledHeight,
+            centerX: finalX + scaledWidth / 2,
+            centerY: finalY + scaledHeight / 2,
+            bottom: finalY + scaledHeight,
+            right: finalX + scaledWidth,
+            bounds: bounds, // Bounding box of non-transparent pixels
+          };
           
           // After drawing Body layer, capture the mask for Prop overlap checking
           if (renderObject.layer.name === "Body") {
@@ -988,6 +1557,9 @@ const startCreating = async () => {
           
           if (gif.export) hashlipsGiffer.add();
         });
+        
+        // Clear rendered layers after each image
+        renderedLayers = {};
 
         if (gif.export) hashlipsGiffer.stop();
 

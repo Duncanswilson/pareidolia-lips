@@ -2,29 +2,73 @@
   "name": "Your Collection #9",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/9.png",
-  "dna": "560342f7befff2f8b5a7bb86d8674001bfb9d471",
+  "dna": "d42029157ad210bcf3fa03e673581d047ad146a4",
   "edition": 9,
-  "date": 1763528612582,
+  "date": 1763947896627,
   "attributes": [
     {
       "trait_type": "Background",
       "value": "pj"
     },
     {
-      "trait_type": "Body",
-      "value": "67"
+      "trait_type": "head_base",
+      "value": "plastic bag"
     },
     {
-      "trait_type": "Eyes",
-      "value": "screweyes"
+      "trait_type": "head",
+      "value": "plastic bag"
+    },
+    {
+      "trait_type": "head",
+      "value": "lid"
+    },
+    {
+      "trait_type": "left ear",
+      "value": "butterfly"
+    },
+    {
+      "trait_type": "right ear",
+      "value": "penny"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "window1"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "outlet"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "terminator"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "hole"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "hexscrew"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "hole2"
+    },
+    {
+      "trait_type": "hat",
+      "value": "crownof thorns"
     },
     {
       "trait_type": "Mouth",
-      "value": "napkin mouth"
+      "value": "xmaslights"
+    },
+    {
+      "trait_type": "nose",
+      "value": "cicada"
     },
     {
       "trait_type": "Prop",
-      "value": "pbt"
+      "value": "kitkat"
     },
     {
       "trait_type": "Pokerchips",

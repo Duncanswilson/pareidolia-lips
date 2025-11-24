@@ -2,33 +2,73 @@
   "name": "Your Collection #8",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/8.png",
-  "dna": "5e29ccaf05f9e176b74401c1abd790b595cc4810",
+  "dna": "3254a32cd6ef19ea921af1bf1b3f8c8fc9dd4e76",
   "edition": 8,
-  "date": 1763528612170,
+  "date": 1763947894714,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "tree_face"
+      "value": "cruise"
     },
     {
-      "trait_type": "Body",
-      "value": "67"
+      "trait_type": "head_base",
+      "value": "leaf"
     },
     {
-      "trait_type": "Eyes",
-      "value": "screweyes"
+      "trait_type": "head",
+      "value": "leaf"
+    },
+    {
+      "trait_type": "head",
+      "value": "rock"
+    },
+    {
+      "trait_type": "left ear",
+      "value": "butterfly"
+    },
+    {
+      "trait_type": "right ear",
+      "value": "penny"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "screw"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "terminator"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "window1"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "hexscrew"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "hole"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "window1"
+    },
+    {
+      "trait_type": "hat",
+      "value": "hair"
     },
     {
       "trait_type": "Mouth",
-      "value": "crown"
+      "value": "napkin mouth"
+    },
+    {
+      "trait_type": "nose",
+      "value": "cicada"
     },
     {
       "trait_type": "Prop",
-      "value": "pbt"
-    },
-    {
-      "trait_type": "Pokerchips",
-      "value": "bulldog"
+      "value": "ahegao"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

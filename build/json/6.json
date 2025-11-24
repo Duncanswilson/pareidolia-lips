@@ -2,33 +2,77 @@
   "name": "Your Collection #6",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/6.png",
-  "dna": "8a1d8028c607af34448219b2f058f336ca97791e",
+  "dna": "75b974f25178b5d06bbf70de0c04c85d5c7ad7bc",
   "edition": 6,
-  "date": 1763528611376,
+  "date": 1763947891114,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "cruise"
+      "value": "tree_face_deepdream"
     },
     {
-      "trait_type": "Body",
-      "value": "67"
+      "trait_type": "head_base",
+      "value": "leaf"
     },
     {
-      "trait_type": "Eyes",
-      "value": "pepper_eyes"
+      "trait_type": "head",
+      "value": "plastic bag"
+    },
+    {
+      "trait_type": "head",
+      "value": "backpack"
+    },
+    {
+      "trait_type": "left ear",
+      "value": "tea"
+    },
+    {
+      "trait_type": "right ear",
+      "value": "penny"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "screw"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "rustedlens"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "outlet"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "hole"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "window1"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "hexscrew"
+    },
+    {
+      "trait_type": "hat",
+      "value": "hair"
     },
     {
       "trait_type": "Mouth",
-      "value": "lips"
+      "value": "pepper_mouth"
+    },
+    {
+      "trait_type": "nose",
+      "value": "cicada"
     },
     {
       "trait_type": "Prop",
-      "value": "hoodie"
+      "value": "hellcat"
     },
     {
       "trait_type": "Pokerchips",
-      "value": "opus"
+      "value": "old"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"
