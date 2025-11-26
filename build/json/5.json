@@ -2,29 +2,33 @@
   "name": "Your Collection #5",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/5.png",
-  "dna": "b3295507120035578793eb030c110e808fcac9b7",
+  "dna": "c332c7ebe43daa4ccaf6b1cf9ade2ac16a1d1f72",
   "edition": 5,
-  "date": 1763947889351,
+  "date": 1764186951410,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "pj"
+      "value": "dd_pareidolia2"
     },
     {
-      "trait_type": "head_base",
+      "trait_type": "head3",
+      "value": "plastic bag"
+    },
+    {
+      "trait_type": "head2",
       "value": "gold balloon"
     },
     {
       "trait_type": "head",
-      "value": "leaf"
+      "value": "rock"
     },
     {
-      "trait_type": "head",
-      "value": "pandaexpress"
+      "trait_type": "hat",
+      "value": "crownof thorns"
     },
     {
       "trait_type": "left ear",
-      "value": "tea"
+      "value": "butterfly"
     },
     {
       "trait_type": "right ear",
@@ -32,19 +36,15 @@
     },
     {
       "trait_type": "left eye",
+      "value": "outlet"
+    },
+    {
+      "trait_type": "left eye",
       "value": "terminator"
     },
     {
       "trait_type": "left eye",
-      "value": "outlet"
-    },
-    {
-      "trait_type": "left eye",
-      "value": "window1"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "window1"
+      "value": "screw"
     },
     {
       "trait_type": "right eye",
@@ -52,27 +52,15 @@
     },
     {
       "trait_type": "right eye",
-      "value": "hole2"
+      "value": "hexscrew"
     },
     {
-      "trait_type": "hat",
-      "value": "hair"
+      "trait_type": "right eye",
+      "value": "hole"
     },
     {
       "trait_type": "Mouth",
-      "value": "napkin mouth"
-    },
-    {
-      "trait_type": "nose",
-      "value": "rock"
-    },
-    {
-      "trait_type": "Prop",
-      "value": "kitkat"
-    },
-    {
-      "trait_type": "Pokerchips",
-      "value": "old"
+      "value": "garage"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

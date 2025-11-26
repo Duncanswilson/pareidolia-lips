@@ -2,33 +2,37 @@
   "name": "Your Collection #2",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/2.png",
-  "dna": "a3b2aa09312b7c7df1cc341509c982b23e97bd88",
+  "dna": "c35a2b960ef740d0f9c43c3012137ac1bd804dfa",
   "edition": 2,
-  "date": 1763947883605,
+  "date": 1764186945939,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "tree_face_deepdream"
+      "value": "Unknown-57"
     },
     {
-      "trait_type": "head_base",
-      "value": "hood"
+      "trait_type": "head3",
+      "value": "lid"
+    },
+    {
+      "trait_type": "head2",
+      "value": "pandaexpress"
     },
     {
       "trait_type": "head",
-      "value": "leaf"
+      "value": "backpack"
     },
     {
-      "trait_type": "head",
-      "value": "trash"
+      "trait_type": "hat",
+      "value": "crownof thorns"
     },
     {
       "trait_type": "left ear",
-      "value": "tea"
+      "value": "butterfly"
     },
     {
       "trait_type": "right ear",
-      "value": "pallet"
+      "value": "penny"
     },
     {
       "trait_type": "left eye",
@@ -36,43 +40,27 @@
     },
     {
       "trait_type": "left eye",
-      "value": "rustedlens"
+      "value": "outlet"
     },
     {
       "trait_type": "left eye",
-      "value": "window1"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "window1"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "spiderman"
+      "value": "rustedlens"
     },
     {
       "trait_type": "right eye",
       "value": "outlet"
     },
     {
-      "trait_type": "hat",
-      "value": "crownof thorns"
+      "trait_type": "right eye",
+      "value": "hexscrew"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "window1"
     },
     {
       "trait_type": "Mouth",
-      "value": "pepper_mouth"
-    },
-    {
-      "trait_type": "nose",
-      "value": "bullet hole"
-    },
-    {
-      "trait_type": "Prop",
-      "value": "hellcat"
-    },
-    {
-      "trait_type": "Pokerchips",
-      "value": "mars"
+      "value": "xmaslights"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

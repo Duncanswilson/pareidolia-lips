@@ -113,7 +113,10 @@ const layersSetup = (layersOrder) => {
     blend: layerObj.options?.blend ?? "source-over",
     opacity: layerObj.options?.opacity ?? 1,
     bypassDNA: layerObj.options?.bypassDNA ?? false,
-    options: layerObj.options || {}, // keep all new collage props
+    options: {
+      ...layerObj.options,
+      originalFolderName: layerObj.name, // Store original folder name for duplicate filtering
+    },
   }));
   return layers;
 };
@@ -122,7 +125,18 @@ const layersSetup = (layersOrder) => {
 
 const genColor = () => {
   let hue = Math.floor(Math.random() * 360);
-  return hslToCanvasColor(hue, 100, background.brightness);
+  // Parse brightness - handle both string percentages ("80%") and numeric values (80)
+  let brightness = background.brightness;
+  if (typeof brightness === 'string' && brightness.endsWith('%')) {
+    brightness = parseFloat(brightness.replace('%', ''));
+  } else if (typeof brightness === 'string') {
+    brightness = parseFloat(brightness);
+  }
+  // Default to 80 if parsing fails
+  if (isNaN(brightness)) {
+    brightness = 80;
+  }
+  return hslToCanvasColor(hue, 100, brightness);
 };
 
 const drawBackground = () => {
@@ -346,15 +360,29 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
       actualWidth = loadedImage.width;
       actualHeight = loadedImage.height;
       
+      // Apply filename-based size multipliers if configured
+      let maxWidth = o.maxWidth;
+      let maxHeight = o.maxHeight;
+      if (o.filenameSizeMultipliers && layer?.selectedElement?.filename) {
+        const filename = layer.selectedElement.filename.toLowerCase();
+        for (const [pattern, multiplier] of Object.entries(o.filenameSizeMultipliers)) {
+          if (filename.includes(pattern.toLowerCase())) {
+            maxWidth = maxWidth ? maxWidth * multiplier : null;
+            maxHeight = maxHeight ? maxHeight * multiplier : null;
+            break; // Use first matching pattern
+          }
+        }
+      }
+      
       // Apply max constraints if specified (maintains aspect ratio)
-      if (o.maxWidth && actualWidth > o.maxWidth) {
-        const scale = o.maxWidth / actualWidth;
-        actualWidth = o.maxWidth;
+      if (maxWidth && actualWidth > maxWidth) {
+        const scale = maxWidth / actualWidth;
+        actualWidth = maxWidth;
         actualHeight = actualHeight * scale;
       }
-      if (o.maxHeight && actualHeight > o.maxHeight) {
-        const scale = o.maxHeight / actualHeight;
-        actualHeight = o.maxHeight;
+      if (maxHeight && actualHeight > maxHeight) {
+        const scale = maxHeight / actualHeight;
+        actualHeight = maxHeight;
         actualWidth = actualWidth * scale;
       }
     } else if (o.maintainAspectRatio && o.width && o.height) {
@@ -611,8 +639,20 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
     y = anchorY + alignOffsetY + offsetY;
   }
   
+  // Check if constraints should be disabled for this filename
+  let shouldConstrain = o.constrainToBounds !== undefined && o.constrainToBounds !== null;
+  if (shouldConstrain && o.filenameDisableConstraints && layer?.selectedElement?.filename) {
+    const filename = layer.selectedElement.filename.toLowerCase();
+    for (const pattern of Object.keys(o.filenameDisableConstraints)) {
+      if (filename.includes(pattern.toLowerCase())) {
+        shouldConstrain = false;
+        break;
+      }
+    }
+  }
+  
   // Constrain to bounds if specified (e.g., keep features within head's bounding box)
-  if (o.constrainToBounds && renderedLayersMap[o.constrainToBounds]) {
+  if (shouldConstrain && o.constrainToBounds && renderedLayersMap[o.constrainToBounds]) {
     const constraintLayer = renderedLayersMap[o.constrainToBounds];
     const useConstraintBounds = constraintLayer.bounds;
     
@@ -1160,7 +1200,9 @@ const removeQueryStrings = (_dna) => {
 };
 
 const filterDNAOptions = (_dna) => {
-  const dnaItems = _dna.split(DNA_DELIMITER);
+  // Split DNA string properly - same logic as constructLayerToDna
+  // Split on "-" but only when followed by digits and colon (start of new DNA part)
+  const dnaItems = _dna.split(/-(?=\d+:)/);
   const filteredDNA = dnaItems.filter((element) => {
     const query = /(\?.*$)/;
     const querystring = query.exec(element);
@@ -1177,7 +1219,7 @@ const filterDNAOptions = (_dna) => {
 const isDnaUnique = (_DnaList = new Set(), _dna = "") =>
   !_DnaList.has(filterDNAOptions(_dna));
 
-const createDna = (_layers) => {
+const createDna = (_layers, backgroundUsageCounts = null) => {
   let randNum = [];
   let dnaIndex = 0;
   // Track selected Prop element IDs to prevent duplicates
@@ -1208,6 +1250,9 @@ const createDna = (_layers) => {
       }
     }
     
+    // Get original folder name (before displayName override) for duplicate filtering
+    const originalFolderName = layer.options?.originalFolderName || layer.name;
+    
     // For Prop layers, filter out already-selected elements
     let availableElements = layer.elements;
     if (layer.name === "Prop") {
@@ -1220,7 +1265,8 @@ const createDna = (_layers) => {
     }
     
     // For head layers, filter out already-selected elements (sampling without replacement)
-    if (layer.name === "head") {
+    // Check original folder name, not displayName
+    if (originalFolderName === "head") {
       availableElements = layer.elements.filter(e => !selectedHeadElementIds.has(e.id));
       if (availableElements.length === 0) {
         console.warn(`Warning: All head elements have been used. Using all elements as fallback.`);
@@ -1230,7 +1276,8 @@ const createDna = (_layers) => {
     }
     
     // For left eye layers, filter out already-selected elements (sampling without replacement)
-    if (layer.name === "left eye") {
+    // Check original folder name, not displayName
+    if (originalFolderName === "left eye") {
       availableElements = layer.elements.filter(e => !selectedLeftEyeElementIds.has(e.id));
       if (availableElements.length === 0) {
         console.warn(`Warning: All left eye elements have been used. Using all elements as fallback.`);
@@ -1240,7 +1287,8 @@ const createDna = (_layers) => {
     }
     
     // For right eye layers, filter out already-selected elements (sampling without replacement)
-    if (layer.name === "right eye") {
+    // Check original folder name, not displayName
+    if (originalFolderName === "right eye") {
       availableElements = layer.elements.filter(e => !selectedRightEyeElementIds.has(e.id));
       if (availableElements.length === 0) {
         console.warn(`Warning: All right eye elements have been used. Using all elements as fallback.`);
@@ -1250,7 +1298,8 @@ const createDna = (_layers) => {
     }
     
     // For mouth layers, filter out already-selected elements (sampling without replacement)
-    if (layer.name === "Mouth") {
+    // Check original folder name, not displayName
+    if (originalFolderName === "Mouth") {
       availableElements = layer.elements.filter(e => !selectedMouthElementIds.has(e.id));
       if (availableElements.length === 0) {
         console.warn(`Warning: All mouth elements have been used. Using all elements as fallback.`);
@@ -1259,16 +1308,55 @@ const createDna = (_layers) => {
       }
     }
     
-    var totalWeight = availableElements.reduce((sum, e) => sum + e.weight, 0);
-    if (totalWeight === 0) {
-      console.warn(`Warning: Layer ${layer.name} has elements with total weight of 0, skipping in DNA creation.`);
-      return; // Skip this layer - no DNA part will be added
+    // For Background layer, adjust weights to favor less-used backgrounds for roughly equal distribution
+    if (layer.name === "Background" && backgroundUsageCounts) {
+      // Calculate the minimum usage count
+      const minUsage = Math.min(...layer.elements.map(e => backgroundUsageCounts[e.filename] || 0));
+      // Adjust weights: add bonus weight inversely proportional to usage
+      // Elements with lower usage get higher effective weight
+      availableElements = availableElements.map(e => {
+        const usage = backgroundUsageCounts[e.filename] || 0;
+        const usageDiff = usage - minUsage;
+        // Add bonus weight: the less used, the more weight
+        // Formula: baseWeight * (1 + bonusMultiplier * (1 / (usageDiff + 1)))
+        // If base weight is 0 or undefined, use 1 as default
+        const baseWeight = e.weight > 0 ? e.weight : 1;
+        const bonusMultiplier = 5; // Adjust this to control how strongly to favor less-used backgrounds
+        const adjustedWeight = baseWeight * (1 + bonusMultiplier / (usageDiff + 1));
+        return { ...e, adjustedWeight, weight: baseWeight };
+      });
+    }
+    
+    var totalWeight = availableElements.reduce((sum, e) => {
+      const weight = e.adjustedWeight !== undefined ? e.adjustedWeight : (e.weight > 0 ? e.weight : 1);
+      return sum + weight;
+    }, 0);
+    
+    if (totalWeight === 0 || isNaN(totalWeight)) {
+      // Background layer should always be included - don't skip it
+      if (layer.name === "Background") {
+        console.warn(`Warning: Background layer has elements with total weight of 0 or NaN. Using equal weights for all elements.`);
+        // Assign equal weight of 1 to all elements
+        availableElements = availableElements.map(e => ({ ...e, weight: 1, adjustedWeight: undefined }));
+        totalWeight = availableElements.length;
+      } else {
+        console.warn(`Warning: Layer ${layer.name} has elements with total weight of 0, skipping in DNA creation.`);
+        return; // Skip this layer - no DNA part will be added
+      }
     }
     let random = Math.floor(Math.random() * totalWeight);
     for (let i = 0; i < availableElements.length; i++) {
-      random -= availableElements[i].weight;
+      // Use same logic as totalWeight calculation - default to 1 if weight is 0 or undefined
+      let elementWeight = availableElements[i].adjustedWeight !== undefined 
+        ? availableElements[i].adjustedWeight 
+        : (availableElements[i].weight > 0 ? availableElements[i].weight : 1);
+      random -= elementWeight;
       if (random < 0) {
         const selectedElement = availableElements[i];
+        // Track background usage for roughly equal distribution
+        if (layer.name === "Background" && backgroundUsageCounts) {
+          backgroundUsageCounts[selectedElement.filename] = (backgroundUsageCounts[selectedElement.filename] || 0) + 1;
+        }
         randNum.push(
           `${selectedElement.id}:${selectedElement.filename}${
             layer.bypassDNA ? "?bypassDNA=true" : ""
@@ -1279,19 +1367,24 @@ const createDna = (_layers) => {
           selectedPropElementIds.add(selectedElement.id);
         }
         // Track selected head element to prevent duplicates across multiple head layers
-        if (layer.name === "head") {
+        // Check original folder name, not displayName
+        const originalFolderName = layer.options?.originalFolderName || layer.name;
+        if (originalFolderName === "head") {
           selectedHeadElementIds.add(selectedElement.id);
         }
         // Track selected left eye element to prevent duplicates across multiple left eye layers
-        if (layer.name === "left eye") {
+        // Check original folder name, not displayName
+        if (originalFolderName === "left eye") {
           selectedLeftEyeElementIds.add(selectedElement.id);
         }
         // Track selected right eye element to prevent duplicates across multiple right eye layers
-        if (layer.name === "right eye") {
+        // Check original folder name, not displayName
+        if (originalFolderName === "right eye") {
           selectedRightEyeElementIds.add(selectedElement.id);
         }
         // Track selected mouth element to prevent duplicates across multiple mouth layers
-        if (layer.name === "Mouth") {
+        // Check original folder name, not displayName
+        if (originalFolderName === "Mouth") {
           selectedMouthElementIds.add(selectedElement.id);
         }
         dnaIndex++;
@@ -1303,17 +1396,74 @@ const createDna = (_layers) => {
 };
 
 const constructLayerToDna = (_dna = "", _layers = []) => {
-  // Split and filter out empty parts (handle consecutive delimiters)
-  const dnaParts = _dna.split(DNA_DELIMITER)
+  // Split DNA string properly - DNA format is "id:filename-id:filename-id:filename"
+  // We need to split on "-" but only when it's followed by digits and colon (start of new DNA part)
+  // Use regex to split on "-" followed by pattern like "123:" (digits:colon)
+  // This handles filenames that contain dashes like "Unknown-57.png"
+  const dnaParts = _dna.split(/-(?=\d+:)/)
     .map(part => part.trim())
     .filter(part => part.length > 0);
+  
+  // First, create a map of DNA parts to their target layers
+  // DNA parts are created in layer order, so match them by position
+  // This handles cases where multiple layers share the same folder name (like head layers)
+  const dnaPartToLayerMap = new Map();
   let dnaPartIndex = 0;
+  
+  _layers.forEach((layer, layerIndex) => {
+    // Skip layers with no elements - they don't have DNA parts
+    if (layer.elements.length === 0) {
+      return;
+    }
+    
+    // Handle layers with probability 0.0 - they were skipped during DNA creation
+    const layerOptions = layer.options || {};
+    if (layerOptions.probability !== undefined && layerOptions.probability !== null) {
+      const probability = Math.max(0, Math.min(1, layerOptions.probability));
+      if (probability === 0) {
+        return; // This layer was skipped, no DNA part for it
+      }
+    }
+    
+    // Match the next DNA part to this layer (DNA parts are created in layer order)
+    if (dnaPartIndex < dnaParts.length) {
+      const dnaPart = dnaParts[dnaPartIndex];
+      const filenameMatch = dnaPart.match(/^\d+:([^?]+)/);
+      const filename = filenameMatch ? filenameMatch[1] : null;
+      
+      if (filename) {
+        // Verify the element exists in this layer
+        const element = layer.elements.find(e => e.filename === filename);
+        if (element) {
+          dnaPartToLayerMap.set(dnaPartIndex, { layerIndex, element, dnaPart });
+          dnaPartIndex++;
+        } else {
+          // Element doesn't match this layer - try to find it in any layer (fallback)
+          for (let i = 0; i < _layers.length; i++) {
+            const otherLayer = _layers[i];
+            const otherElement = otherLayer.elements.find(e => e.filename === filename);
+            if (otherElement) {
+              dnaPartToLayerMap.set(dnaPartIndex, { layerIndex: i, element: otherElement, dnaPart });
+              dnaPartIndex++;
+              break;
+            }
+          }
+        }
+      } else {
+        dnaPartIndex++; // Skip invalid DNA part
+      }
+    }
+  });
   
   if (debugLogs) {
     console.log(`Constructing DNA: "${_dna}"`);
     console.log(`DNA parts (${dnaParts.length}):`, dnaParts);
     console.log(`Layers (${_layers.length}):`, _layers.map(l => ({ name: l.name, elementCount: l.elements.length, bypassDNA: l.bypassDNA })));
+    console.log(`DNA part to layer map:`, Array.from(dnaPartToLayerMap.entries()).map(([i, v]) => ({ dnaIndex: i, layerIndex: v.layerIndex, filename: v.element.filename })));
   }
+  
+  // Track which DNA parts have been consumed
+  const consumedDnaParts = new Set();
   
   return _layers.map((layer, layerIndex) => {
     // Skip layers with no elements - they won't have DNA parts
@@ -1331,25 +1481,18 @@ const constructLayerToDna = (_dna = "", _layers = []) => {
     
     // Handle layers with probability 0.0
     // If probability is 0.0 now, skip the layer (same as createDna)
-    // However, if DNA contains a part for it (from when probability was > 0.0), consume it to maintain alignment
     const layerOptions = layer.options || {};
     if (layerOptions.probability !== undefined && layerOptions.probability !== null) {
       const probability = Math.max(0, Math.min(1, layerOptions.probability)); // Clamp between 0 and 1
       if (probability === 0) {
         // Skip this layer - it won't appear in this generation (same as createDna)
-        // But if DNA part exists and matches this layer (from when probability was > 0.0), consume it
-        if (dnaPartIndex < dnaParts.length) {
-          const dnaPart = dnaParts[dnaPartIndex];
-          const elementId = cleanDna(dnaPart);
-          // Check if this DNA part belongs to this layer by checking if the element ID exists
-          const matchingElement = layer.elements.find((e) => e.id == elementId);
-          if (matchingElement) {
-            // This DNA part belongs to this layer - consume it to maintain alignment
-            dnaPartIndex++;
+        // Check if there's a DNA part for this layer and mark it as consumed if found
+        for (const [dnaIndex, entry] of dnaPartToLayerMap.entries()) {
+          if (entry.layerIndex === layerIndex && !consumedDnaParts.has(dnaIndex)) {
+            consumedDnaParts.add(dnaIndex);
+            break;
           }
-          // If it doesn't match, the DNA was created with probability 0.0, so don't consume it
         }
-        // Skip this layer - it won't appear in this generation
         return {
           name: layer.name,
           blend: layer.blend,
@@ -1361,19 +1504,17 @@ const constructLayerToDna = (_dna = "", _layers = []) => {
       }
     }
     
-    // Check if we have a DNA part for this layer
-    if (dnaPartIndex >= dnaParts.length) {
-      // Count layers that should have DNA parts (exclude probability 0.0 and empty layers)
-      const layersWithDnaParts = _layers.filter(l => {
-        if (l.elements.length === 0) return false;
-        const opts = l.options || {};
-        if (opts.probability !== undefined && opts.probability !== null) {
-          const prob = Math.max(0, Math.min(1, opts.probability));
-          if (prob === 0) return false;
-        }
-        return true;
-      }).length;
-      console.warn(`Warning: No DNA part found for layer ${layer.name} at layer index ${layerIndex}. DNA parts: ${dnaParts.length}, Layers that should have DNA parts: ${layersWithDnaParts}`);
+    // Find the DNA part that belongs to this layer (using the pre-built map)
+    let matchingDnaEntry = null;
+    for (const [dnaIndex, entry] of dnaPartToLayerMap.entries()) {
+      if (entry.layerIndex === layerIndex && !consumedDnaParts.has(dnaIndex)) {
+        matchingDnaEntry = { dnaIndex, ...entry };
+        break;
+      }
+    }
+    
+    // If no DNA part found for this layer, it was skipped during DNA creation
+    if (!matchingDnaEntry) {
       return {
         name: layer.name,
         blend: layer.blend,
@@ -1384,42 +1525,16 @@ const constructLayerToDna = (_dna = "", _layers = []) => {
       };
     }
     
-    const dnaPart = dnaParts[dnaPartIndex];
+    // Mark this DNA part as consumed
+    consumedDnaParts.add(matchingDnaEntry.dnaIndex);
     
-    // Always advance DNA index for layers with elements (DNA parts are created in order)
-    dnaPartIndex++;
+    const dnaPart = matchingDnaEntry.dnaPart;
+    const selectedElement = matchingDnaEntry.element;
     
-    // Validate DNA part format before parsing
-    if (!dnaPart || typeof dnaPart !== 'string' || dnaPart.trim().length === 0) {
-      console.warn(`Warning: Empty or invalid DNA part for layer ${layer.name} at index ${dnaPartIndex - 1}. DNA: "${_dna}"`);
-      return {
-        name: layer.name,
-        blend: layer.blend,
-        opacity: layer.opacity,
-        options: layer.options,
-        selectedElement: undefined,
-        layer,
-      };
-    }
-    
+    // Validate the element ID matches
     const elementId = cleanDna(dnaPart);
-    
-    if (isNaN(elementId)) {
-      console.warn(`Warning: Invalid DNA part format "${dnaPart}" for layer ${layer.name}. Expected format: "id:filename" or "id:filename?bypassDNA=true". Full DNA: "${_dna}"`);
-      return {
-        name: layer.name,
-        blend: layer.blend,
-        opacity: layer.opacity,
-        options: layer.options,
-        selectedElement: undefined,
-        layer,
-      };
-    }
-    
-    let selectedElement = layer.elements.find((e) => e.id == elementId);
-    
-    if (!selectedElement) {
-      console.warn(`Warning: No element found with ID ${elementId} for layer ${layer.name}. DNA part: "${dnaPart}". Available IDs: ${layer.elements.map(e => e.id).join(', ')}`);
+    if (!isNaN(elementId) && selectedElement.id != elementId) {
+      console.warn(`Warning: DNA part ID ${elementId} doesn't match element ID ${selectedElement.id} for layer ${layer.name}. DNA part: "${dnaPart}"`);
     }
     
     return {
@@ -1473,10 +1588,20 @@ const startCreating = async () => {
 
   while (layerConfigIndex < layerConfigurations.length) {
     const layers = layersSetup(layerConfigurations[layerConfigIndex].layersOrder);
+    // Track background usage counts for roughly equal distribution
+    const backgroundUsageCounts = {};
+    // Initialize counts for all background elements
+    const backgroundLayer = layers.find(l => l.name === "Background");
+    if (backgroundLayer) {
+      backgroundLayer.elements.forEach(e => {
+        backgroundUsageCounts[e.filename] = 0;
+      });
+    }
+    
     while (
       editionCount <= layerConfigurations[layerConfigIndex].growEditionSizeTo
     ) {
-      let newDna = createDna(layers);
+      let newDna = createDna(layers, backgroundUsageCounts);
       if (!isDnaUnique(dnaList, newDna)) {
         console.log("DNA exists!");
         failedCount++;
@@ -1490,10 +1615,15 @@ const startCreating = async () => {
       }
 
       let results = constructLayerToDna(newDna, layers);
+      
       // Filter out layers without a selectedElement before loading
       let validResults = results.filter((layer) => layer.selectedElement !== undefined);
+      
       let loadedElements = validResults.map((layer) => loadLayerImg(layer));
-      await Promise.all(loadedElements).then((renderObjectArray) => {
+      await Promise.all(loadedElements).catch((error) => {
+        console.error(`Error loading layers for edition ${abstractedIndexes[0]}:`, error);
+        throw error;
+      }).then((renderObjectArray) => {
         ctx.clearRect(0, 0, format.width, format.height);
         // Reset body mask and rendered layers for each new image
         bodyMask = null;
@@ -1513,6 +1643,12 @@ const startCreating = async () => {
         if (background.generate) drawBackground();
 
         renderObjectArray.forEach((renderObject, index) => {
+          // Skip if no image was loaded
+          if (!renderObject.loadedImage) {
+            console.warn(`Warning: No image loaded for layer ${renderObject.layer.name} in edition ${abstractedIndexes[0]}`);
+            return;
+          }
+          
           // Get layer options once and store them for reuse
           if (!renderObject.layerOpts) {
             renderObject.layerOpts = getLayerOpts(renderObject.layer, bodyMask, renderObject.loadedImage, renderedLayers);

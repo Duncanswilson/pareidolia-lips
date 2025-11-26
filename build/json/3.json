@@ -2,25 +2,29 @@
   "name": "Your Collection #3",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/3.png",
-  "dna": "b2440a9715b722b9b804063c327d9fcbf18a061f",
+  "dna": "a425d8da881ed2acd16b2951444f4c44c403bad8",
   "edition": 3,
-  "date": 1763947885580,
+  "date": 1764186947733,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "tree_face"
+      "value": "incel"
     },
     {
-      "trait_type": "head_base",
-      "value": "can"
+      "trait_type": "head3",
+      "value": "rock"
+    },
+    {
+      "trait_type": "head2",
+      "value": "outlet"
     },
     {
       "trait_type": "head",
-      "value": "leaf"
+      "value": "gold balloon"
     },
     {
-      "trait_type": "head",
-      "value": "lid"
+      "trait_type": "hat",
+      "value": "hair"
     },
     {
       "trait_type": "left ear",
@@ -36,7 +40,7 @@
     },
     {
       "trait_type": "left eye",
-      "value": "rustedlens"
+      "value": "outlet"
     },
     {
       "trait_type": "left eye",
@@ -44,35 +48,19 @@
     },
     {
       "trait_type": "right eye",
-      "value": "window1"
-    },
-    {
-      "trait_type": "right eye",
       "value": "outlet"
     },
     {
       "trait_type": "right eye",
-      "value": "hole2"
+      "value": "hole"
     },
     {
-      "trait_type": "hat",
-      "value": "hair"
+      "trait_type": "right eye",
+      "value": "window1"
     },
     {
       "trait_type": "Mouth",
-      "value": "glasscrack"
-    },
-    {
-      "trait_type": "nose",
-      "value": "bean"
-    },
-    {
-      "trait_type": "Prop",
-      "value": "xavier"
-    },
-    {
-      "trait_type": "Pokerchips",
-      "value": "old"
+      "value": "hammock"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

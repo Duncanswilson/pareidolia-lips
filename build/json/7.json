@@ -2,25 +2,29 @@
   "name": "Your Collection #7",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/7.png",
-  "dna": "13835a3f98fe8b747ad943cdff80109f7688d7e0",
+  "dna": "72c3a50011da066ca45b2815c250e77d5c3bda93",
   "edition": 7,
-  "date": 1763947892858,
+  "date": 1764186955226,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "pj"
+      "value": "Unknown-56"
     },
     {
-      "trait_type": "head_base",
-      "value": "pandaexpress"
+      "trait_type": "head3",
+      "value": "lid"
+    },
+    {
+      "trait_type": "head2",
+      "value": "gold balloon"
     },
     {
       "trait_type": "head",
       "value": "rock"
     },
     {
-      "trait_type": "head",
-      "value": "can"
+      "trait_type": "hat",
+      "value": "crownof thorns"
     },
     {
       "trait_type": "left ear",
@@ -32,47 +36,31 @@
     },
     {
       "trait_type": "left eye",
-      "value": "window1"
-    },
-    {
-      "trait_type": "left eye",
-      "value": "outlet"
+      "value": "rustedlens"
     },
     {
       "trait_type": "left eye",
       "value": "screw"
     },
     {
-      "trait_type": "right eye",
-      "value": "hexscrew"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "spiderman"
+      "trait_type": "left eye",
+      "value": "terminator"
     },
     {
       "trait_type": "right eye",
       "value": "outlet"
     },
     {
-      "trait_type": "hat",
-      "value": "crownof thorns"
+      "trait_type": "right eye",
+      "value": "woodknot"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "hole"
     },
     {
       "trait_type": "Mouth",
-      "value": "pepper_mouth"
-    },
-    {
-      "trait_type": "nose",
-      "value": "cicada"
-    },
-    {
-      "trait_type": "Prop",
-      "value": "ahegao"
-    },
-    {
-      "trait_type": "Pokerchips",
-      "value": "bulldog"
+      "value": "hammock"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

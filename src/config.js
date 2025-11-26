@@ -147,7 +147,7 @@ const solanaMetadata = {
 
 const layerConfigurations = [
   {
-    growEditionSizeTo: 10,
+    growEditionSizeTo: 33,
      layersOrder: [
       // Background layer - full canvas
       { 
@@ -164,16 +164,64 @@ const layerConfigurations = [
         } 
       },
     
-      // Head - Mr. Potato Head base shape (large oval/round head) - Background layer (largest)
-      // Uses displayName to create unique reference while still using "head" folder
+      // Head layer 1 - Background layer (largest) - drawn first, appears behind
+      // Positioned with absolute coordinates to create progressive overlap
+      { 
+        name: "head", 
+        options: {
+          displayName: "head3",  // Different name so it doesn't overwrite main "head"
+          x: 12,  // Adjusted position: centered better for larger size
+          y: 0,  // Adjusted position: centered better for larger size
+          width: 1000, 
+          height: 1100,
+          maintainAspectRatio: true,  // Preserve aspect ratio to prevent stretching
+          randomPosition: false,
+          positionJitter: 25,
+          randomRotate: false,
+          rotateRange: 0.1,
+          randomScale: false,
+          scaleRange: [0.95, 1.05],
+          randomOpacity: false,
+          opacity: 1.0,
+          randomBlend: false,
+        } 
+      },
+    
+      // Head layer 2 - Middle layer (medium size) - drawn second, appears in middle
+      // Positioned with absolute coordinates to create progressive overlap
+      { 
+        name: "head", 
+        options: {
+          displayName: "head2",  // Different name so it doesn't overwrite main "head"
+          x: 82,  // Adjusted position: centered better for larger size
+          y: 50,   // Adjusted position: centered better for larger size
+          width: 860, 
+          height: 980,
+          maintainAspectRatio: true,  // Preserve aspect ratio to prevent stretching
+          randomPosition: false,
+          positionJitter: 25,
+          randomRotate: false,
+          rotateRange: 0.1,
+          randomScale: false,
+          scaleRange: [0.95, 1.05],
+          randomOpacity: false,
+          opacity: 1.0,
+          randomBlend: false,
+        } 
+      },
+    
+      // Head layer 3 - Foreground layer (smallest) - drawn last, appears on top
+      // This is the main reference head that other layers anchor to
+      // Must be stored as "head" so other layers can find it
       { 
         name: "head",  // Still uses layers/head/ folder
         options: {
-          displayName: "head_base",  // Unique name for anchoring (stored in renderedLayers map)
-          x: 112, // Center horizontally: (1024 - 800) / 2
-          y: 62,  // Center vertically: (1024 - 900) / 2
-          width: 800, 
-          height: 900,
+          displayName: "head",  // Store as "head" so other layers can anchor to it
+          x: 137,  // Adjusted position: centered better for larger size
+          y: 87,  // Adjusted position: centered better for larger size
+          width: 750, 
+          height: 860,
+          maintainAspectRatio: true,  // Preserve aspect ratio to prevent stretching
           randomPosition: false,
           positionJitter: 25,
           randomRotate: false,
@@ -186,44 +234,30 @@ const layerConfigurations = [
         } 
       },
     
-      // Head layer 2 - Middle layer (medium size)
-      { 
-        name: "head", 
-        options: { 
-          x: 187, // Center horizontally: (1024 - 650) / 2
-          y: 137, // Center vertically: (1024 - 750) / 2
-          width: 650, 
-          height: 750,
+      // Hat - positioned on top of head (drawn before ears and eyes so they appear on top)
+      // Anchored to the smallest head
+      {
+        name: "hat",
+        options: {
+          anchorTo: "head",  // Anchor to the smallest head
+          anchorPoint: "bounds-top",  // Use top of smallest head
+          align: "bounds-top",  // Align top of hat to top of smallest head
+          offsetX: 0,  // Centered horizontally
+          offsetY: -50,  // Position slightly above the head
+          width: 1035,  // Scaled up to match larger head
+          height: 1035,  // Scaled up to match larger head
+          maintainAspectRatio: true,  // Preserve aspect ratio
+          useBounds: true,  // Use bounding box for precise positioning
           randomPosition: false,
-          positionJitter: 25,
+          positionJitter: 15,
           randomRotate: false,
-          rotateRange: 0.1,
+          rotateRange: 0.08,
           randomScale: false,
           scaleRange: [0.95, 1.05],
           randomOpacity: false,
           opacity: 1.0,
           randomBlend: false,
-        } 
-      },
-    
-      // Head layer 3 - Foreground layer (smallest)
-      { 
-        name: "head", 
-        options: { 
-          x: 237, // Center horizontally: (1024 - 550) / 2
-          y: 187, // Center vertically: (1024 - 650) / 2
-          width: 550, 
-          height: 650,
-          randomPosition: false,
-          positionJitter: 25,
-          randomRotate: false,
-          rotateRange: 0.1,
-          randomScale: false,
-          scaleRange: [0.95, 1.05],
-          randomOpacity: false,
-          opacity: 1.0,
-          randomBlend: false,
-        } 
+        },
       },
     
       // Left ear - positioned on the left side of head, vertically centered
@@ -238,8 +272,8 @@ const layerConfigurations = [
           offsetY: 0,                       // Vertically centered relative to head's center
           useActualDimensions: true,        // Use actual image size - adapts to each asset
           useBounds: true,                  // Enable bounding box-based positioning
-          maxWidth: 450,                    // Max width constraint - bigger ears
-          maxHeight: 550,                   // Max height constraint - bigger ears
+          maxWidth: 520,                    // Max width constraint - bigger ears (scaled up)
+          maxHeight: 630,                   // Max height constraint - bigger ears (scaled up)
           randomPosition: false,
           positionJitter: 10,
           randomRotate: false,
@@ -264,8 +298,8 @@ const layerConfigurations = [
           offsetY: 0,                       // Vertically centered relative to head's center
           useActualDimensions: true,        // Use actual image size - adapts to each asset
           useBounds: true,                  // Enable bounding box-based positioning
-          maxWidth: 450,                    // Max width constraint - bigger ears
-          maxHeight: 550,                   // Max height constraint - bigger ears
+          maxWidth: 520,                    // Max width constraint - bigger ears (scaled up)
+          maxHeight: 630,                   // Max height constraint - bigger ears (scaled up)
           randomPosition: false,
           positionJitter: 10,
           randomRotate: false,
@@ -290,8 +324,8 @@ const layerConfigurations = [
           useActualDimensions: true,      // Use actual image size - adapts to each asset
           useBounds: true,                 // Enable bounding box-based positioning
           constrainToBounds: "head",     // Keep within head's bounding box
-          maxWidth: 650,                  // Max width constraint - largest
-          maxHeight: 650,                 // Max height constraint - largest
+          maxWidth: 750,                  // Max width constraint - largest (scaled up)
+          maxHeight: 750,                 // Max height constraint - largest (scaled up)
           randomPosition: false,
           positionJitter: 15,
           randomRotate: false,
@@ -316,8 +350,8 @@ const layerConfigurations = [
           useActualDimensions: true,      // Use actual image size - adapts to each asset
           useBounds: true,                 // Enable bounding box-based positioning
           constrainToBounds: "head",     // Keep within head's bounding box
-          maxWidth: 550,                  // Max width constraint - medium
-          maxHeight: 550,                 // Max height constraint - medium
+          maxWidth: 630,                  // Max width constraint - medium (scaled up)
+          maxHeight: 630,                 // Max height constraint - medium (scaled up)
           randomPosition: false,
           positionJitter: 15,
           randomRotate: false,
@@ -342,8 +376,8 @@ const layerConfigurations = [
           useActualDimensions: true,      // Use actual image size - adapts to each asset
           useBounds: true,                 // Enable bounding box-based positioning
           constrainToBounds: "head",     // Keep within head's bounding box
-          maxWidth: 450,                  // Max width constraint - smallest
-          maxHeight: 450,                 // Max height constraint - smallest
+          maxWidth: 520,                  // Max width constraint - smallest (scaled up)
+          maxHeight: 520,                 // Max height constraint - smallest (scaled up)
           randomPosition: false,
           positionJitter: 15,
           randomRotate: false,
@@ -368,8 +402,8 @@ const layerConfigurations = [
           useActualDimensions: true,      // Use actual image size
           useBounds: true,                 // Use bounding box centers for positioning
           constrainToBounds: "head",      // Keep within head's bounding box
-          maxWidth: 650,                  // Max constraints maintain aspect ratio - largest
-          maxHeight: 650,
+          maxWidth: 750,                  // Max constraints maintain aspect ratio - largest (scaled up)
+          maxHeight: 750,
           randomPosition: false,
           positionJitter: 15,
           randomRotate: false,
@@ -394,8 +428,8 @@ const layerConfigurations = [
           useActualDimensions: true,      // Use actual image size
           useBounds: true,                 // Use bounding box centers for positioning
           constrainToBounds: "head",      // Keep within head's bounding box
-          maxWidth: 550,                  // Max constraints maintain aspect ratio - medium
-          maxHeight: 550,
+          maxWidth: 630,                  // Max constraints maintain aspect ratio - medium (scaled up)
+          maxHeight: 630,
           randomPosition: false,
           positionJitter: 15,
           randomRotate: false,
@@ -420,8 +454,8 @@ const layerConfigurations = [
           useActualDimensions: true,      // Use actual image size
           useBounds: true,                 // Use bounding box centers for positioning
           constrainToBounds: "head",      // Keep within head's bounding box
-          maxWidth: 450,                  // Max constraints maintain aspect ratio - smallest
-          maxHeight: 450,
+          maxWidth: 520,                  // Max constraints maintain aspect ratio - smallest (scaled up)
+          maxHeight: 520,
           randomPosition: false,
           positionJitter: 15,
           randomRotate: false,
@@ -434,31 +468,11 @@ const layerConfigurations = [
         } 
       },
     
-      // Hat - positioned on top of head and eyes (drawn after eyes so it appears on top)
-      {
-        name: "hat",
-        options: {
-          x: 112, // Center horizontally: (1024 - 800) / 2, adjusted for larger size
-          y: 10, // Overlapping with head: adjusted for larger size
-          width: 800,
-          height: 800,
-          randomPosition: false,
-          positionJitter: 15,
-          randomRotate: false,
-          rotateRange: 0.08,
-          randomScale: false,
-          scaleRange: [0.95, 1.05],
-          randomOpacity: false,
-          opacity: 1.0,
-          randomBlend: false,
-        },
-      },
-    
       // Hoodie - conditional layer, positioned around the smallest head layer
       {
         name: "hoodie",
         options: {
-          probability: 0.0, // never appears
+          probability: 0.1, // 10% chance of appearing
           anchorTo: "head", // Anchor to the smallest head layer (last one drawn with name "head")
           anchorPoint: "bounds-center", // Use center of head's bounding box
           align: "bounds-center", // Align center of hoodie to head center
@@ -493,8 +507,21 @@ const layerConfigurations = [
           useActualDimensions: true,      // Use actual mouth size
           useBounds: true,                // Use bounds for precise positioning relative to actual content
           constrainToBounds: "head",      // Keep within head's bounding box
-          maxWidth: 400,                  // Max constraints maintain aspect ratio
-          maxHeight: 300,
+          maxWidth: 460,                  // Max constraints maintain aspect ratio (scaled up)
+          maxHeight: 345,
+          // Filename-based size multipliers: maps filename patterns to size multipliers
+          // Example: "lips.png" will be 1.5x bigger, "clip.png" will be 1.2x bigger
+          filenameSizeMultipliers: {
+            // Add your filename patterns here, e.g.:
+            "glasscrack": 3.5,   // Makes glasscrack.png large enough to touch sides (400*3.5 = 1400px max width)
+            // "clip": 1.2,        // Makes clip.png 1.2x bigger
+            // "garage": 0.8,      // Makes garage.png 0.8x smaller
+          },
+          // Filename-based constraint disabling: disables constrainToBounds for specific filenames
+          // Useful for large elements that should extend beyond normal bounds
+          filenameDisableConstraints: {
+            "glasscrack": true,  // Disable head bounds constraint for glasscrack.png
+          },
           randomPosition: false,
           positionJitter: 12,
           randomRotate: false,
@@ -520,8 +547,8 @@ const layerConfigurations = [
           useActualDimensions: true,      // Use actual nose size
           useBounds: true,                // Use bounds for precise positioning relative to actual content
           constrainToBounds: "head",      // Keep within head's bounding box
-          maxWidth: 550,                  // Max constraints maintain aspect ratio
-          maxHeight: 550,
+          maxWidth: 630,                  // Max constraints maintain aspect ratio (scaled up)
+          maxHeight: 630,
           randomPosition: false,
           positionJitter: 12,
           randomRotate: false,
@@ -535,42 +562,42 @@ const layerConfigurations = [
       },
     
       // Props - decorative elements, positioned in bottom right corner
-      {
-        name: "Prop",
-        options: {
-          randomPosition: false,
-          x: 768, // Bottom right: (1024 - 256)
-          y: 768, // Bottom right: (1024 - 256)
-          width: 256,
-          height: 256,
-          randomRotate: false,
-          rotateRange: 0.15,
-          randomScale: false,
-          scaleRange: [0.8, 1.2],
-          randomOpacity: false,
-          opacity: 1.0,
-          randomBlend: false,
-        },
-      },
+      // {
+      //   name: "Prop",
+      //   options: {
+      //     randomPosition: false,
+      //     x: 768, // Bottom right: (1024 - 256)
+      //     y: 768, // Bottom right: (1024 - 256)
+      //     width: 256,
+      //     height: 256,
+      //     randomRotate: false,
+      //     rotateRange: 0.15,
+      //     randomScale: false,
+      //     scaleRange: [0.8, 1.2],
+      //     randomOpacity: false,
+      //     opacity: 1.0,
+      //     randomBlend: false,
+      //   },
+      // },
     
       // Pokerchips - decorative elements, positioned at corners
-      {
-        name: "Pokerchips",
-        options: {
-          randomPosition: false,
-          x: 0, // Bottom-left corner
-          y: 896, // (1024 - 128)
-          width: 128,
-          height: 128,
-          randomRotate: false,
-          rotateRange: 0.2,
-          randomScale: false,
-          scaleRange: [0.9, 1.1],
-          randomOpacity: false,
-          opacity: 1.0,
-          randomBlend: false,
-        },
-      },
+      // {
+      //   name: "Pokerchips",
+      //   options: {
+      //     randomPosition: false,
+      //     x: 0, // Bottom-left corner
+      //     y: 896, // (1024 - 128)
+      //     width: 128,
+      //     height: 128,
+      //     randomRotate: false,
+      //     rotateRange: 0.2,
+      //     randomScale: false,
+      //     scaleRange: [0.9, 1.1],
+      //     randomOpacity: false,
+      //     opacity: 1.0,
+      //     randomBlend: false,
+      //   },
+      // },
     
       // Filter - effects layer on top of everything
       // {
@@ -632,8 +659,8 @@ const pixelFormat = {
 const background = {
   generate: true,
   brightness: "80%",
-  static: false,
-  default: "#000000",
+  static: true,  // Set to true for consistent background color, false for random colors
+  default: "#ffffff",  // White background (change to any hex color you prefer)
 };
 
 const extraMetadata = {};
