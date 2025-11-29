@@ -696,6 +696,18 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
       offsetY += o.relativeOffsetY * currentSize;
     }
     
+    // Apply percentage-based offset if specified (relative to current layer's height)
+    // Prefer bounding box height if available (more accurate for content with transparent padding)
+    if (o.offsetYPercent !== undefined && o.offsetYPercent !== null) {
+      let heightForPercent = actualHeight;
+      if (useBoundsForAlign && currentBounds && loadedImage) {
+        // Use bounding box height, scaled to match rendered size (same scaling as relativeOffsetY)
+        const bboxHeight = (currentBounds.bottom - currentBounds.top) * (actualHeight / loadedImage.height);
+        heightForPercent = bboxHeight;
+      }
+      offsetY += o.offsetYPercent * heightForPercent;
+    }
+    
     // align determines how this layer aligns to the anchor point
     const align = o.align || 'center';
     

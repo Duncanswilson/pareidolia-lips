@@ -263,7 +263,7 @@ const layerConfigurations = [
           probability: 0.1, // 10% chance of appearing (mutually exclusive with hat)
           anchorTo: "head1",  // Anchor to the smallest head (foreground layer)
           anchorPoint: "bounds-top",  // Use top of smallest head's bounding box
-          align: "bounds-bottom",  // Align bottom of hair's bounding box to top of head
+          align: "bounds-center",  // Align center of hair's bounding box to center of head
           offsetX: 0,  // Centered horizontally
           offsetY: 150,  // Push hair down so it sits on the head (positive = down)
           width: 1035,  // Scaled up to match larger head
@@ -502,7 +502,7 @@ const layerConfigurations = [
           anchorPoint: "bounds-top",  // Use top of smallest head's bounding box
           align: "bounds-bottom",  // Align bottom of hat's bounding box to top of head
           offsetX: 0,  // Centered horizontally
-          offsetY: 150,  // Push hat down so it sits on the head (positive = down)
+          offsetYPercent: 0.15,  // Push hat down proportionally to its height (negative = down, taller hats pushed down more)
           width: 1035,  // Scaled up to match larger head
           height: 1035,  // Scaled up to match larger head
           maintainAspectRatio: true,  // Preserve aspect ratio
