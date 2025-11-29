@@ -164,6 +164,27 @@ const layerConfigurations = [
         } 
       },
     
+      // Banner ads layer - positioned behind all face layers
+      { 
+        name: "banner ads", 
+        options: { 
+          x: 0, 
+          y: 0, 
+          width: 1024, 
+          height: 1024,
+          maintainAspectRatio: true,
+          randomPosition: false,
+          positionJitter: 0,
+          randomRotate: false,
+          rotateRange: 0,
+          randomScale: false,
+          scaleRange: [1.0, 1.0],
+          randomOpacity: false,
+          opacity: 1.0,
+          randomBlend: false,
+        } 
+      },
+    
       // Head layer 1 - Background layer (largest) - drawn first, appears behind
       // Positioned with absolute coordinates to create progressive overlap
       { 
@@ -216,7 +237,7 @@ const layerConfigurations = [
       { 
         name: "head",  // Still uses layers/head/ folder
         options: {
-          displayName: "head",  // Store as "head" so other layers can anchor to it
+          displayName: "head1",  // Store as "head1" so other layers can anchor to it
           x: 137,  // Adjusted position: centered better for larger size
           y: 87,  // Adjusted position: centered better for larger size
           width: 750, 
@@ -234,16 +255,17 @@ const layerConfigurations = [
         } 
       },
     
-      // Hat - positioned on top of head (drawn before ears and eyes so they appear on top)
-      // Anchored to the smallest head
+      // Hair - positioned on top of head (same position as hat)
+      // Mutually exclusive with hat (hair 10%, hat 90%)
       {
-        name: "hat",
+        name: "hair",
         options: {
-          anchorTo: "head",  // Anchor to the smallest head
-          anchorPoint: "bounds-top",  // Use top of smallest head
-          align: "bounds-top",  // Align top of hat to top of smallest head
+          probability: 0.1, // 10% chance of appearing (mutually exclusive with hat)
+          anchorTo: "head1",  // Anchor to the smallest head (foreground layer)
+          anchorPoint: "bounds-top",  // Use top of smallest head's bounding box
+          align: "bounds-bottom",  // Align bottom of hair's bounding box to top of head
           offsetX: 0,  // Centered horizontally
-          offsetY: -50,  // Position slightly above the head
+          offsetY: 150,  // Push hair down so it sits on the head (positive = down)
           width: 1035,  // Scaled up to match larger head
           height: 1035,  // Scaled up to match larger head
           maintainAspectRatio: true,  // Preserve aspect ratio
@@ -265,7 +287,7 @@ const layerConfigurations = [
       { 
         name: "left ear", 
         options: { 
-          anchorTo: "head",
+          anchorTo: "head1",
           anchorPoint: "bounds-left",        // Use left edge of head's bounding box
           align: "bounds-right",            // Align right edge of ear to attach to head
           offsetX: 40,                      // Scoot inward (positive moves right/inward)
@@ -291,7 +313,7 @@ const layerConfigurations = [
       { 
         name: "right ear", 
         options: { 
-          anchorTo: "head",
+          anchorTo: "head1",
           anchorPoint: "bounds-right",       // Use right edge of head's bounding box
           align: "bounds-left",             // Align left edge of ear to attach to head
           offsetX: -40,                     // Scoot inward (negative moves left/inward)
@@ -316,16 +338,16 @@ const layerConfigurations = [
       { 
         name: "left eye", 
         options: { 
-          anchorTo: "head",
+          anchorTo: "head1",
           anchorPoint: "bounds-top",       // Use bounding box top center of head's actual content
           align: "bounds-center",         // Align using bounding box center of eye's actual content
-          offsetX: -100,                  // Offset to the left of center (for left eye) - closer together
+          offsetX: -125,                  // Offset to the left of center (centered on head1 with right eye)
           offsetY: 200,                   // Offset down from top (~1/3 of head height)
           useActualDimensions: true,      // Use actual image size - adapts to each asset
           useBounds: true,                 // Enable bounding box-based positioning
           constrainToBounds: "head",     // Keep within head's bounding box
-          maxWidth: 750,                  // Max width constraint - largest (scaled up)
-          maxHeight: 750,                 // Max height constraint - largest (scaled up)
+          maxWidth: 950,                  // Max width constraint - largest (scaled up more)
+          maxHeight: 950,                 // Max height constraint - largest (scaled up more)
           randomPosition: false,
           positionJitter: 15,
           randomRotate: false,
@@ -342,16 +364,16 @@ const layerConfigurations = [
       { 
         name: "left eye", 
         options: { 
-          anchorTo: "head",
+          anchorTo: "head1",
           anchorPoint: "bounds-top",       // Use bounding box top center of head's actual content
           align: "bounds-center",         // Align using bounding box center of eye's actual content
-          offsetX: -100,                  // Offset to the left of center (for left eye) - closer together
+          offsetX: -125,                  // Offset to the left of center (centered on head1 with right eye)
           offsetY: 200,                   // Offset down from top (~1/3 of head height)
           useActualDimensions: true,      // Use actual image size - adapts to each asset
           useBounds: true,                 // Enable bounding box-based positioning
           constrainToBounds: "head",     // Keep within head's bounding box
-          maxWidth: 630,                  // Max width constraint - medium (scaled up)
-          maxHeight: 630,                 // Max height constraint - medium (scaled up)
+          maxWidth: 800,                  // Max width constraint - medium (scaled up more)
+          maxHeight: 800,                 // Max height constraint - medium (scaled up more)
           randomPosition: false,
           positionJitter: 15,
           randomRotate: false,
@@ -368,16 +390,16 @@ const layerConfigurations = [
       { 
         name: "left eye", 
         options: { 
-          anchorTo: "head",
+          anchorTo: "head1",
           anchorPoint: "bounds-top",       // Use bounding box top center of head's actual content
           align: "bounds-center",         // Align using bounding box center of eye's actual content
-          offsetX: -100,                  // Offset to the left of center (for left eye) - closer together
+          offsetX: -125,                  // Offset to the left of center (centered on head1 with right eye)
           offsetY: 200,                   // Offset down from top (~1/3 of head height)
           useActualDimensions: true,      // Use actual image size - adapts to each asset
           useBounds: true,                 // Enable bounding box-based positioning
           constrainToBounds: "head",     // Keep within head's bounding box
-          maxWidth: 520,                  // Max width constraint - smallest (scaled up)
-          maxHeight: 520,                 // Max height constraint - smallest (scaled up)
+          maxWidth: 650,                  // Max width constraint - smallest (scaled up more)
+          maxHeight: 650,                 // Max height constraint - smallest (scaled up more)
           randomPosition: false,
           positionJitter: 15,
           randomRotate: false,
@@ -397,7 +419,7 @@ const layerConfigurations = [
           anchorTo: "left eye",
           anchorPoint: "bounds-center",    // Use bounding box center of left eye
           align: "bounds-center",         // Align using bounding box center of right eye
-          offsetX: 200,                    // Absolute 200px horizontal distance between bounding box centers - closer together
+          offsetX: 250,                    // Absolute 250px horizontal distance between bounding box centers
           offsetY: 0,                      // Same vertical level (centers aligned horizontally)
           useActualDimensions: true,      // Use actual image size
           useBounds: true,                 // Use bounding box centers for positioning
@@ -423,7 +445,7 @@ const layerConfigurations = [
           anchorTo: "left eye",
           anchorPoint: "bounds-center",    // Use bounding box center of left eye
           align: "bounds-center",         // Align using bounding box center of right eye
-          offsetX: 200,                    // Absolute 200px horizontal distance between bounding box centers - closer together
+          offsetX: 250,                    // Absolute 250px horizontal distance between bounding box centers
           offsetY: 0,                      // Same vertical level (centers aligned horizontally)
           useActualDimensions: true,      // Use actual image size
           useBounds: true,                 // Use bounding box centers for positioning
@@ -449,7 +471,7 @@ const layerConfigurations = [
           anchorTo: "left eye",
           anchorPoint: "bounds-center",    // Use bounding box center of left eye
           align: "bounds-center",         // Align using bounding box center of right eye
-          offsetX: 200,                    // Absolute 200px horizontal distance between bounding box centers - closer together
+          offsetX: 250,                    // Absolute 250px horizontal distance between bounding box centers
           offsetY: 0,                      // Same vertical level (centers aligned horizontally)
           useActualDimensions: true,      // Use actual image size
           useBounds: true,                 // Use bounding box centers for positioning
@@ -468,12 +490,41 @@ const layerConfigurations = [
         } 
       },
     
+      // Hat - positioned on top of head (drawn after eyes so it appears on top of them)
+      // Anchored to the smallest head (head1) - the foreground head layer
+      // Mutually exclusive with hair (hair 10%, hat 90%)
+      {
+        name: "hat",
+        options: {
+          // No probability here - hat appears if hair doesn't (handled by mutuallyExclusiveWith logic)
+          mutuallyExclusiveWith: "hair", // Special flag: skip if hair was selected, otherwise always show
+          anchorTo: "head1",  // Anchor to the smallest head (foreground layer)
+          anchorPoint: "bounds-top",  // Use top of smallest head's bounding box
+          align: "bounds-bottom",  // Align bottom of hat's bounding box to top of head
+          offsetX: 0,  // Centered horizontally
+          offsetY: 150,  // Push hat down so it sits on the head (positive = down)
+          width: 1035,  // Scaled up to match larger head
+          height: 1035,  // Scaled up to match larger head
+          maintainAspectRatio: true,  // Preserve aspect ratio
+          useBounds: true,  // Use bounding box for precise positioning
+          randomPosition: false,
+          positionJitter: 15,
+          randomRotate: false,
+          rotateRange: 0.08,
+          randomScale: false,
+          scaleRange: [0.95, 1.05],
+          randomOpacity: false,
+          opacity: 1.0,
+          randomBlend: false,
+        },
+      },
+    
       // Hoodie - conditional layer, positioned around the smallest head layer
       {
         name: "hoodie",
         options: {
-          probability: 0.1, // 10% chance of appearing
-          anchorTo: "head", // Anchor to the smallest head layer (last one drawn with name "head")
+          probability: 0.0, // 0% chance of appearing
+          anchorTo: "head1", // Anchor to the smallest head layer (last one drawn with name "head")
           anchorPoint: "bounds-center", // Use center of head's bounding box
           align: "bounds-center", // Align center of hoodie to head center
           offsetX: 0, // Centered horizontally
@@ -494,19 +545,19 @@ const layerConfigurations = [
         },
       },
     
-      // Mouth - positioned centered below eyes (drawn first, behind nose)
+      // Mouth - positioned centered relative to head1 (drawn first, behind nose)
       // Constrained to stay within head's bounding box
       { 
         name: "Mouth", 
         options: { 
-          anchorTo: "left eye",
-          anchorPoint: "bounds-bottom",   // Use bottom edge of left eye's bounding box
-          align: "bounds-top",            // Align top of mouth's bounding box
-          offsetX: 100,                   // Center horizontally: right eye is 200px right, so center is 100px
-          offsetY: 200,                   // Position below eyes (nose will be between eyes and mouth)
+          anchorTo: "head1",              // Anchor to smallest head (foreground layer)
+          anchorPoint: "bounds-center",    // Use center of head1's bounding box
+          align: "bounds-top",             // Align top of mouth to anchor - keeps tops aligned regardless of size
+          offsetX: 0,                      // Centered horizontally on head
+          offsetY: 133,                      // Position below head center (adjusted for bounds-top alignment)
           useActualDimensions: true,      // Use actual mouth size
           useBounds: true,                // Use bounds for precise positioning relative to actual content
-          constrainToBounds: "head",      // Keep within head's bounding box
+          constrainToBounds: "head",       // Keep within head's bounding box
           maxWidth: 460,                  // Max constraints maintain aspect ratio (scaled up)
           maxHeight: 345,
           // Filename-based size multipliers: maps filename patterns to size multipliers
@@ -514,13 +565,13 @@ const layerConfigurations = [
           filenameSizeMultipliers: {
             // Add your filename patterns here, e.g.:
             "glasscrack": 3.5,   // Makes glasscrack.png large enough to touch sides (400*3.5 = 1400px max width)
-            // "clip": 1.2,        // Makes clip.png 1.2x bigger
-            // "garage": 0.8,      // Makes garage.png 0.8x smaller
+            "hammock": 2.5,        // Makes clip.png 1.2x bigger
+            "xmaslights": 1.8,      // Makes garage.png 0.8x smaller
           },
           // Filename-based constraint disabling: disables constrainToBounds for specific filenames
           // Useful for large elements that should extend beyond normal bounds
           filenameDisableConstraints: {
-            "glasscrack": true,  // Disable head bounds constraint for glasscrack.png
+            "glasscrack": false,  // Disable head bounds constraint for glasscrack.png
           },
           randomPosition: false,
           positionJitter: 12,
@@ -534,19 +585,19 @@ const layerConfigurations = [
         } 
       },
     
-      // Nose - positioned centered between eyes and mouth (drawn after mouth, in foreground)
+      // Nose - positioned at center of head1's bounding box
       // Constrained to stay within head's bounding box
       { 
         name: "nose", 
         options: { 
-          anchorTo: "left eye",
-          anchorPoint: "bounds-bottom",   // Use bottom edge of left eye's bounding box
-          align: "bounds-top",            // Align top of nose's bounding box
-          offsetX: 100,                   // Center horizontally: right eye is 200px right, so center is 100px
-          offsetY: 50,                    // Absolute 50px gap below eye bottom (edge to edge)
+          anchorTo: "head1",              // Anchor to smallest head (foreground layer)
+          anchorPoint: "bounds-center",   // Use center of head1's bounding box
+          align: "bounds-center",         // Align center of nose to center of head
+          offsetX: 0,                     // Centered horizontally on head
+          offsetY: 50,                    // Offset down from center (positive = down)
           useActualDimensions: true,      // Use actual nose size
           useBounds: true,                // Use bounds for precise positioning relative to actual content
-          constrainToBounds: "head",      // Keep within head's bounding box
+          constrainToBounds: "head1",     // Keep within head1's bounding box
           maxWidth: 630,                  // Max constraints maintain aspect ratio (scaled up)
           maxHeight: 630,
           randomPosition: false,
