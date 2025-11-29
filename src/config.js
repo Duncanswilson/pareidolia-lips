@@ -502,7 +502,19 @@ const layerConfigurations = [
           anchorPoint: "bounds-top",  // Use top of smallest head's bounding box
           align: "bounds-bottom",  // Align bottom of hat's bounding box to top of head
           offsetX: 0,  // Centered horizontally
-          offsetYPercent: 0.15,  // Push hat down proportionally to its height (negative = down, taller hats pushed down more)
+          offsetYPercent: 0.15,  // Push hat down proportionally to its height (positive = down, taller hats pushed down more)
+          // Filename-based offset overrides: maps filename patterns to specific offset percentages
+          // Values > 0.15 push the hat down more (more overlap with head)
+          // Values < 0.15 push the hat up (less overlap)
+          filenameOffsetYPercent: {
+            "crownofthorns": 0.4, 
+            "fern": 0.5,            
+            "guyfawkes": 0.20,
+            "marker": 0.33,
+            "spray": 0.5,
+            "strawberry": 0.7,
+            "orb": 0.5
+          },
           width: 1035,  // Scaled up to match larger head
           height: 1035,  // Scaled up to match larger head
           maintainAspectRatio: true,  // Preserve aspect ratio
