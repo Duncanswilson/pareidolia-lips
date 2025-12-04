@@ -2,65 +2,57 @@
   "name": "Your Collection #5",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/5.png",
-  "dna": "c332c7ebe43daa4ccaf6b1cf9ade2ac16a1d1f72",
+  "dna": "49469f99e3ef4cefecb64bd9e9f5a715456fc99a",
   "edition": 5,
-  "date": 1764186951410,
+  "date": 1764640244138,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "dd_pareidolia2"
+      "value": "3"
+    },
+    {
+      "trait_type": "banner ads",
+      "value": "christian"
     },
     {
       "trait_type": "head3",
-      "value": "plastic bag"
+      "value": "backpack"
     },
     {
       "trait_type": "head2",
-      "value": "gold balloon"
+      "value": "coconut"
     },
     {
-      "trait_type": "head",
-      "value": "rock"
-    },
-    {
-      "trait_type": "hat",
-      "value": "crownof thorns"
-    },
-    {
-      "trait_type": "left ear",
-      "value": "butterfly"
-    },
-    {
-      "trait_type": "right ear",
-      "value": "pallet"
+      "trait_type": "head1",
+      "value": "mask"
     },
     {
       "trait_type": "left eye",
-      "value": "outlet"
+      "value": "window_black"
     },
     {
       "trait_type": "left eye",
-      "value": "terminator"
-    },
-    {
-      "trait_type": "left eye",
-      "value": "screw"
+      "value": "window"
     },
     {
       "trait_type": "right eye",
-      "value": "outlet"
+      "value": "kenny"
     },
     {
       "trait_type": "right eye",
       "value": "hexscrew"
     },
     {
-      "trait_type": "right eye",
-      "value": "hole"
+      "trait_type": "hat",
+      "value": "strawberry"
     },
     {
       "trait_type": "Mouth",
-      "value": "garage"
+      "value": "pepper_mouth"
+    },
+    {
+      "trait_type": "nose",
+      "value": "latch"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

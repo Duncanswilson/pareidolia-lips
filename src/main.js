@@ -21,6 +21,10 @@ const {
   network,
   solanaMetadata,
   gif,
+  applyDifferenceToAllLayers,
+  applyXorPostProcess,
+  xorPostProcessOpacity,
+  xorPostProcessOffset,
 } = require(`${basePath}/src/config.js`);
 
 const canvas = createCanvas(format.width, format.height);
@@ -213,6 +217,9 @@ let bodyMask = null;
 // Format: { layerName: { x, y, width, height, centerX, centerY, bottom, right, bounds: { minX, minY, maxX, maxY, centerX, centerY, top, bottom, left, right } } }
 let renderedLayers = {};
 
+// Track baseline jitter values per layer name to ensure consistency across layers with the same name
+let baselineJitterMap = {};
+
 // Calculate bounding box of non-transparent pixels in an image
 // Improved with configurable alpha threshold (default: 1 for better edge detection)
 // Lower threshold (1 instead of 10) captures semi-transparent edge pixels from anti-aliasing,
@@ -357,7 +364,7 @@ const checkOverlapWithBody = (x, y, width, height, angle, image) => {
   return false; // No overlap found
 };
 
-const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLayersMap = {}) => {
+const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLayersMap = {}, baselineJitterMap = {}) => {
   const o = layer?.options || {};
   
   // Use actual image dimensions if available, otherwise use config dimensions
@@ -407,6 +414,10 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
         const filename = layer.selectedElement.filename.toLowerCase();
         for (const [pattern, multiplier] of Object.entries(o.filenameSizeMultipliers)) {
           if (filename.includes(pattern.toLowerCase())) {
+            // Scale up the actual dimensions by the multiplier
+            actualWidth = actualWidth * multiplier;
+            actualHeight = actualHeight * multiplier;
+            // Also increase max constraints to allow the larger size
             maxWidth = maxWidth ? maxWidth * multiplier : null;
             maxHeight = maxHeight ? maxHeight * multiplier : null;
             sizeMultiplier = multiplier; // Store multiplier for offset scaling
@@ -442,6 +453,18 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
       }
     }
   }
+  
+  // Calculate scale early so we can use scaled dimensions for alignment offsets and other calculations
+  // This ensures alignment accounts for random scaling that will be applied
+  let scale = o.scale ?? 1.0;
+  if (o.randomScale && o.scaleRange) {
+    const [minScale, maxScale] = o.scaleRange;
+    scale = minScale + Math.random() * (maxScale - minScale);
+  }
+  
+  // Calculate scaled dimensions for alignment calculations
+  const scaledWidth = actualWidth * scale;
+  const scaledHeight = actualHeight * scale;
   
   // Handle layer references for dynamic positioning
   let x = o.x ?? 0;
@@ -503,25 +526,25 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
       y = format.height / 2;
     } else {
       // Debug logging for hat layer to verify it's using the correct head
-      if (layer.name === "hat" && o.anchorTo) {
-        console.log(`[DEBUG] Hat anchoring to "${o.anchorTo}":`, {
-          anchorLayer: {
-            name: o.anchorTo,
-            x: anchorLayer.x,
-            y: anchorLayer.y,
-            width: anchorLayer.width,
-            height: anchorLayer.height,
-            boundsTop: anchorLayer.bounds?.top,
-            boundsBottom: anchorLayer.bounds?.bottom,
-          },
-          availableHeads: Object.keys(renderedLayersMap).filter(k => k.startsWith('head')).map(k => ({
-            name: k,
-            y: renderedLayersMap[k].y,
-            height: renderedLayersMap[k].height,
-            boundsTop: renderedLayersMap[k].bounds?.top,
-          }))
-        });
-      }
+      // if (layer.name === "hat" && o.anchorTo) {
+      //   console.log(`[DEBUG] Hat anchoring to "${o.anchorTo}":`, {
+      //     anchorLayer: {
+      //       name: o.anchorTo,
+      //       x: anchorLayer.x,
+      //       y: anchorLayer.y,
+      //       width: anchorLayer.width,
+      //       height: anchorLayer.height,
+      //       boundsTop: anchorLayer.bounds?.top,
+      //       boundsBottom: anchorLayer.bounds?.bottom,
+      //     },
+      //     availableHeads: Object.keys(renderedLayersMap).filter(k => k.startsWith('head')).map(k => ({
+      //       name: k,
+      //       y: renderedLayersMap[k].y,
+      //       height: renderedLayersMap[k].height,
+      //       boundsTop: renderedLayersMap[k].bounds?.top,
+      //     }))
+      //   });
+      // }
     const anchorPoint = o.anchorPoint || 'center';
     const useBounds = o.useBounds !== false; // Default to true - use bounding box if available
     
@@ -653,6 +676,17 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
     let offsetX = o.offsetX ?? 0;
     let offsetY = o.offsetY ?? 0;
     
+    // Apply filename-based Y offset override if specified
+    if (o.filenameOffsetY && layer?.selectedElement?.filename) {
+      const filename = layer.selectedElement.filename.toLowerCase();
+      for (const [pattern, override] of Object.entries(o.filenameOffsetY)) {
+        if (filename.includes(pattern.toLowerCase())) {
+          offsetY += override;
+          break; // Use first matching pattern
+        }
+      }
+    }
+    
     // Apply relative offsets if specified
     if (o.relativeOffsetX !== undefined && o.relativeOffsetX !== null) {
       // Calculate anchor layer size
@@ -666,8 +700,8 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
       if (o.relativeOffsetUseBoth !== false && loadedImage) {
         const useCurrentBounds = o.useBounds !== false && currentBounds;
         const currentLayerSize = useCurrentBounds && currentBounds
-          ? (currentBounds.right - currentBounds.left) * (actualWidth / loadedImage.width)
-          : actualWidth;
+          ? (currentBounds.right - currentBounds.left) * (scaledWidth / loadedImage.width)
+          : scaledWidth;
         // Use average of both sizes
         currentSize = (anchorSize + currentLayerSize) / 2;
       }
@@ -687,8 +721,8 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
       if (o.relativeOffsetUseBoth !== false && loadedImage) {
         const useCurrentBounds = o.useBounds !== false && currentBounds;
         const currentLayerSize = useCurrentBounds && currentBounds
-          ? (currentBounds.bottom - currentBounds.top) * (actualHeight / loadedImage.height)
-          : actualHeight;
+          ? (currentBounds.bottom - currentBounds.top) * (scaledHeight / loadedImage.height)
+          : scaledHeight;
         // Use average of both sizes
         currentSize = (anchorSize + currentLayerSize) / 2;
       }
@@ -711,10 +745,10 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
         }
       }
       
-      let heightForPercent = actualHeight;
+      let heightForPercent = scaledHeight;
       if (useBoundsForAlign && currentBounds && loadedImage) {
         // Use bounding box height, scaled to match rendered size (same scaling as relativeOffsetY)
-        const bboxHeight = (currentBounds.bottom - currentBounds.top) * (actualHeight / loadedImage.height);
+        const bboxHeight = (currentBounds.bottom - currentBounds.top) * (scaledHeight / loadedImage.height);
         heightForPercent = bboxHeight;
       }
       offsetY += effectiveOffsetYPercent * heightForPercent;
@@ -729,11 +763,11 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
     
     if (useBoundsForAlign && currentBounds) {
       // Use bounding box for alignment
-      // Calculate scale factors based on actual rendered dimensions vs original image dimensions
-      // Use actualWidth/actualHeight (matching rendered size) so alignment offset correctly positions
+      // Calculate scale factors based on scaled rendered dimensions vs original image dimensions
+      // Use scaledWidth/scaledHeight (matching final rendered size with random scale) so alignment offset correctly positions
       // the bounding box point.
-      const scaleX = actualWidth / originalWidth;
-      const scaleY = actualHeight / originalHeight;
+      const scaleX = scaledWidth / originalWidth;
+      const scaleY = scaledHeight / originalHeight;
       
       // Ensure we have valid scale factors (avoid division by zero)
       const safeAlignScaleX = isNaN(scaleX) || !isFinite(scaleX) ? 1 : scaleX;
@@ -793,7 +827,7 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
       }
     } else {
       // Use image edges for alignment (original behavior)
-      // Use actual rendered dimensions (matching rendered size) for alignment offset
+      // Use scaled rendered dimensions (matching final rendered size with random scale) for alignment offset
       
       switch (align) {
         case 'top-left':
@@ -801,37 +835,37 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
           alignOffsetY = 0;
           break;
         case 'top-right':
-          alignOffsetX = -actualWidth;
+          alignOffsetX = -scaledWidth;
           alignOffsetY = 0;
           break;
         case 'bottom-left':
           alignOffsetX = 0;
-          alignOffsetY = -actualHeight;
+          alignOffsetY = -scaledHeight;
           break;
         case 'bottom-right':
-          alignOffsetX = -actualWidth;
-          alignOffsetY = -actualHeight;
+          alignOffsetX = -scaledWidth;
+          alignOffsetY = -scaledHeight;
           break;
         case 'top':
-          alignOffsetX = -actualWidth / 2;
+          alignOffsetX = -scaledWidth / 2;
           alignOffsetY = 0;
           break;
         case 'bottom':
-          alignOffsetX = -actualWidth / 2;
-          alignOffsetY = -actualHeight;
+          alignOffsetX = -scaledWidth / 2;
+          alignOffsetY = -scaledHeight;
           break;
         case 'left':
           alignOffsetX = 0;
-          alignOffsetY = -actualHeight / 2;
+          alignOffsetY = -scaledHeight / 2;
           break;
         case 'right':
-          alignOffsetX = -actualWidth;
-          alignOffsetY = -actualHeight / 2;
+          alignOffsetX = -scaledWidth;
+          alignOffsetY = -scaledHeight / 2;
           break;
         case 'center':
         default:
-          alignOffsetX = -actualWidth / 2;
-          alignOffsetY = -actualHeight / 2;
+          alignOffsetX = -scaledWidth / 2;
+          alignOffsetY = -scaledHeight / 2;
           break;
       }
     }
@@ -886,8 +920,9 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
       
       if (currentBounds && o.useBounds !== false) {
         // Use bounding box for constraint checking
-        const layerScaleX = actualWidth / loadedImage.width;
-        const layerScaleY = actualHeight / loadedImage.height;
+        // Use scaled dimensions to account for random scaling
+        const layerScaleX = scaledWidth / loadedImage.width;
+        const layerScaleY = scaledHeight / loadedImage.height;
         
         // Ensure we have valid scale factors
         const safeLayerScaleX = isNaN(layerScaleX) || !isFinite(layerScaleX) ? 1 : layerScaleX;
@@ -899,10 +934,11 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
         layerBottom = y + currentBounds.bottom * safeLayerScaleY;
       } else {
         // Use image edges for constraint checking
+        // Use scaled dimensions to account for random scaling
         layerLeft = x;
         layerTop = y;
-        layerRight = x + actualWidth;
-        layerBottom = y + actualHeight;
+        layerRight = x + scaledWidth;
+        layerBottom = y + scaledHeight;
       }
       
       // Adjust position to keep within bounds
@@ -924,8 +960,9 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
   // Handle random positioning
   
   if (o.randomPosition) {
-    const width = actualWidth;
-    const height = actualHeight;
+    // Use scaled dimensions for random positioning to account for random scaling
+    const width = scaledWidth;
+    const height = scaledHeight;
     
     // For Props, try to find a position that doesn't overlap with Body
     if (layer.name === "Prop" && bodyMaskData) {
@@ -966,12 +1003,20 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
     y += (Math.random() - 0.5) * o.positionJitter;
   }
   
-  // Handle random scaling
-  let scale = o.scale ?? 1.0;
-  if (o.randomScale && o.scaleRange) {
-    const [minScale, maxScale] = o.scaleRange;
-    scale = minScale + Math.random() * (maxScale - minScale);
+  // Apply baseline jitter (vertical-only offset) for random baseline variation
+  // Use shared jitter value for layers with the same name to ensure consistency
+  if (o.baselineJitter) {
+    // Check if a baseline jitter value already exists for this layer name
+    if (!baselineJitterMap[layer.name]) {
+      // Generate and store a shared baseline jitter value for this layer name
+      baselineJitterMap[layer.name] = (Math.random() - 0.5) * o.baselineJitter;
+    }
+    // Use the shared baseline jitter value
+    y += baselineJitterMap[layer.name];
   }
+  
+  // Scale was already calculated earlier for alignment calculations
+  // No need to recalculate here, it's already set above
   
   // Handle random opacity
   let opacity = o.opacity ?? layer.opacity ?? 1;
@@ -998,6 +1043,11 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
       "luminosity"    // brightness shift
     ];
     blend = blendModes[Math.floor(Math.random() * blendModes.length)];
+  }
+  
+  // Apply difference blend mode to all layers if global flag is enabled
+  if (applyDifferenceToAllLayers) {
+    blend = "difference";
   }
   
   // Handle rotation
@@ -1074,7 +1124,7 @@ const drawElement = (renderObj, index, layersLen) => {
   if (renderObj.layerOpts) {
     layerOpts = renderObj.layerOpts;
   } else {
-    layerOpts = getLayerOpts(layer, bodyMask, loadedImage, renderedLayers);
+    layerOpts = getLayerOpts(layer, bodyMask, loadedImage, renderedLayers, baselineJitterMap);
     renderObj.layerOpts = layerOpts; // Store for reuse
   }
   
@@ -1899,6 +1949,8 @@ const startCreating = async () => {
         // Reset body mask and rendered layers for each new image
         bodyMask = null;
         renderedLayers = {};
+        // Reset baseline jitter map to share consistent jitter values across layers with the same name
+        baselineJitterMap = {};
         
         if (gif.export) {
           hashlipsGiffer = new HashlipsGiffer(
@@ -1922,7 +1974,7 @@ const startCreating = async () => {
           
           // Get layer options once and store them for reuse
           if (!renderObject.layerOpts) {
-            renderObject.layerOpts = getLayerOpts(renderObject.layer, bodyMask, renderObject.loadedImage, renderedLayers);
+            renderObject.layerOpts = getLayerOpts(renderObject.layer, bodyMask, renderObject.loadedImage, renderedLayers, baselineJitterMap);
           }
           
           drawElement(renderObject, index, layers.length);
@@ -1970,6 +2022,22 @@ const startCreating = async () => {
         
         // Clear rendered layers after each image
         renderedLayers = {};
+
+        // Apply XOR post-processing effect if enabled (creates glitch/error effect)
+        if (applyXorPostProcess) {
+          // Capture the current canvas state
+          const tempCanvas = createCanvas(format.width, format.height);
+          const tempCtx = tempCanvas.getContext("2d");
+          tempCtx.drawImage(canvas, 0, 0);
+          
+          // Draw the captured image back with XOR blend mode, offset for glitch effect
+          // XORing with a shifted version creates visible glitch patterns
+          ctx.globalCompositeOperation = "xor";
+          ctx.globalAlpha = xorPostProcessOpacity;
+          ctx.drawImage(tempCanvas, xorPostProcessOffset, 0); // Shift horizontally
+          ctx.globalCompositeOperation = "source-over";
+          ctx.globalAlpha = 1;
+        }
 
         if (gif.export) hashlipsGiffer.stop();
 

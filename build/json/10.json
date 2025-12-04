@@ -2,69 +2,57 @@
   "name": "Your Collection #10",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/10.png",
-  "dna": "94a9f16c7652a882d2aa1c0f7471a79c6f97485f",
+  "dna": "fe9191428ba8398df7bfa360db3a941375a0a5da",
   "edition": 10,
-  "date": 1764186960744,
+  "date": 1764640250062,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "3"
+      "value": "2"
+    },
+    {
+      "trait_type": "banner ads",
+      "value": "freelance"
     },
     {
       "trait_type": "head3",
-      "value": "hood"
+      "value": "wall"
     },
     {
       "trait_type": "head2",
-      "value": "clipart_egg"
+      "value": "coconut"
     },
     {
-      "trait_type": "head",
-      "value": "rock"
-    },
-    {
-      "trait_type": "hat",
-      "value": "crownof thorns"
-    },
-    {
-      "trait_type": "left ear",
-      "value": "butterfly"
-    },
-    {
-      "trait_type": "right ear",
-      "value": "penny"
+      "trait_type": "head1",
+      "value": "plastic bag"
     },
     {
       "trait_type": "left eye",
-      "value": "window1"
+      "value": "glass hole"
     },
     {
       "trait_type": "left eye",
-      "value": "screw"
-    },
-    {
-      "trait_type": "left eye",
-      "value": "terminator"
+      "value": "frozenlake"
     },
     {
       "trait_type": "right eye",
-      "value": "outlet"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "window1"
+      "value": "kenny"
     },
     {
       "trait_type": "right eye",
       "value": "woodknot"
     },
     {
+      "trait_type": "hat",
+      "value": "marker"
+    },
+    {
       "trait_type": "Mouth",
-      "value": "lips"
+      "value": "facepaint"
     },
     {
       "trait_type": "nose",
-      "value": "lure"
+      "value": "drop"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

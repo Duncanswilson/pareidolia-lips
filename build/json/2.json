@@ -2,37 +2,29 @@
   "name": "Your Collection #2",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/2.png",
-  "dna": "c35a2b960ef740d0f9c43c3012137ac1bd804dfa",
+  "dna": "e238e9bb4309017ea4c5b8248b9ff819dc26ef39",
   "edition": 2,
-  "date": 1764186945939,
+  "date": 1764640240778,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "Unknown-57"
+      "value": "Unknown-59"
+    },
+    {
+      "trait_type": "banner ads",
+      "value": "alamo cam"
     },
     {
       "trait_type": "head3",
-      "value": "lid"
+      "value": "coconut"
     },
     {
       "trait_type": "head2",
-      "value": "pandaexpress"
+      "value": "plastic bag"
     },
     {
-      "trait_type": "head",
-      "value": "backpack"
-    },
-    {
-      "trait_type": "hat",
-      "value": "crownof thorns"
-    },
-    {
-      "trait_type": "left ear",
-      "value": "butterfly"
-    },
-    {
-      "trait_type": "right ear",
-      "value": "penny"
+      "trait_type": "head1",
+      "value": "lid"
     },
     {
       "trait_type": "left eye",
@@ -40,27 +32,31 @@
     },
     {
       "trait_type": "left eye",
-      "value": "outlet"
+      "value": "sun"
     },
     {
       "trait_type": "left eye",
-      "value": "rustedlens"
+      "value": "eyebrow"
     },
     {
       "trait_type": "right eye",
-      "value": "outlet"
+      "value": "hole2"
     },
     {
       "trait_type": "right eye",
-      "value": "hexscrew"
+      "value": "drain"
     },
     {
-      "trait_type": "right eye",
-      "value": "window1"
+      "trait_type": "hat",
+      "value": "fern"
     },
     {
       "trait_type": "Mouth",
-      "value": "xmaslights"
+      "value": "garage"
+    },
+    {
+      "trait_type": "nose",
+      "value": "cicada"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"
