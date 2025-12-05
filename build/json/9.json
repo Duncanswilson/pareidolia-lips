@@ -2,69 +2,57 @@
   "name": "Your Collection #9",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/9.png",
-  "dna": "6c91e263fc9f0241431a5e0421e62dc46dd1e215",
+  "dna": "d7fde1b709b55439ea1dd2bddb11b0a4c67ca209",
   "edition": 9,
-  "date": 1764186958908,
+  "date": 1764640248878,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "Unknown-57"
+      "value": "Unknown-55"
+    },
+    {
+      "trait_type": "banner ads",
+      "value": "russiangambling"
     },
     {
       "trait_type": "head3",
-      "value": "pandaexpress"
+      "value": "can"
     },
     {
       "trait_type": "head2",
-      "value": "hood"
+      "value": "leaf"
     },
     {
-      "trait_type": "head",
-      "value": "trash"
-    },
-    {
-      "trait_type": "hat",
-      "value": "crownof thorns"
-    },
-    {
-      "trait_type": "left ear",
-      "value": "tea"
-    },
-    {
-      "trait_type": "right ear",
-      "value": "pallet"
+      "trait_type": "head1",
+      "value": "backpack"
     },
     {
       "trait_type": "left eye",
-      "value": "outlet"
+      "value": "screw"
     },
     {
       "trait_type": "left eye",
-      "value": "terminator"
-    },
-    {
-      "trait_type": "left eye",
-      "value": "rustedlens"
+      "value": "window"
     },
     {
       "trait_type": "right eye",
-      "value": "hole"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "hexscrew"
+      "value": "woodknot"
     },
     {
       "trait_type": "right eye",
       "value": "window1"
     },
     {
+      "trait_type": "hat",
+      "value": "crownofthorns"
+    },
+    {
       "trait_type": "Mouth",
-      "value": "hammock"
+      "value": "pepper_mouth"
     },
     {
       "trait_type": "nose",
-      "value": "cicada"
+      "value": "drop"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

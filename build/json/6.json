@@ -2,73 +2,57 @@
   "name": "Your Collection #6",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/6.png",
-  "dna": "c4c16cfe4f2c3c162b82fc76d2c8e61f274e4a3d",
+  "dna": "206d81a585784288100b5f14d1dbb7a99d1357cb",
   "edition": 6,
-  "date": 1764186953426,
+  "date": 1764640245311,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "Unknown-60"
+      "value": "Unknown-40"
+    },
+    {
+      "trait_type": "banner ads",
+      "value": "adopt"
     },
     {
       "trait_type": "head3",
-      "value": "pandaexpress"
+      "value": "foil"
     },
     {
       "trait_type": "head2",
-      "value": "clipart_egg"
+      "value": "coconut"
     },
     {
-      "trait_type": "head",
-      "value": "lid"
-    },
-    {
-      "trait_type": "hat",
-      "value": "hair"
-    },
-    {
-      "trait_type": "left ear",
-      "value": "tea"
-    },
-    {
-      "trait_type": "right ear",
-      "value": "penny"
+      "trait_type": "head1",
+      "value": "leaf"
     },
     {
       "trait_type": "left eye",
+      "value": "frozenlake"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "rustedlens"
+    },
+    {
+      "trait_type": "right eye",
       "value": "window1"
     },
     {
-      "trait_type": "left eye",
-      "value": "screw"
-    },
-    {
-      "trait_type": "left eye",
-      "value": "terminator"
-    },
-    {
       "trait_type": "right eye",
-      "value": "outlet"
+      "value": "woodknot"
     },
     {
-      "trait_type": "right eye",
-      "value": "spiderman"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "hole"
-    },
-    {
-      "trait_type": "hoodie",
-      "value": "hoodie"
+      "trait_type": "hat",
+      "value": "guyfawkes"
     },
     {
       "trait_type": "Mouth",
-      "value": "garage"
+      "value": "xmaslights"
     },
     {
       "trait_type": "nose",
-      "value": "kiwisticker"
+      "value": "metal ball"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"
