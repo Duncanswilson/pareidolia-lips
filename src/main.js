@@ -14,6 +14,9 @@ const {
   layerConfigurations,
   rarityDelimiter,
   shuffleLayerConfigurations,
+  scrambleLayers,
+  scrambleLayerNames,
+  respectAnchorDependencies,
   debugLogs,
   extraMetadata,
   text,
@@ -295,6 +298,31 @@ const getImageBounds = (image, alphaThreshold = 1) => {
   };
 };
 
+// Calculate the percentage of non-transparent pixels in an image
+// Returns a float between 0.0 (fully transparent) and 1.0 (fully opaque)
+const calculateCoveragePercentage = (image, alphaThreshold = 1) => {
+  if (!image) return 0;
+  
+  const tempCanvas = createCanvas(image.width, image.height);
+  const tempCtx = tempCanvas.getContext("2d");
+  tempCtx.drawImage(image, 0, 0);
+  
+  const imageData = tempCtx.getImageData(0, 0, image.width, image.height);
+  const data = imageData.data;
+  
+  let nonTransparentPixels = 0;
+  const totalPixels = image.width * image.height;
+  
+  for (let i = 0; i < data.length; i += 4) {
+    const alpha = data[i + 3];
+    if (alpha > alphaThreshold) {
+      nonTransparentPixels++;
+    }
+  }
+  
+  return nonTransparentPixels / totalPixels;
+};
+
 // Check if a position overlaps with Body pixels
 const checkOverlapWithBody = (x, y, width, height, angle, image) => {
   if (!bodyMask || !image) return false;
@@ -364,659 +392,39 @@ const checkOverlapWithBody = (x, y, width, height, angle, image) => {
   return false; // No overlap found
 };
 
-const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLayersMap = {}, baselineJitterMap = {}) => {
+const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLayersMap = {}, baselineJitterMap = {}, differenceBlendLayers = null) => {
   const o = layer?.options || {};
   
-  // Use actual image dimensions if available, otherwise use config dimensions
-  let actualWidth = o.width ?? format.width;
-  let actualHeight = o.height ?? format.height;
+  // Background layer uses explicit width/height if provided, otherwise use format dimensions
+  // All other layers are forced to 1000x1000 regardless of source image size
+  let actualWidth, actualHeight;
   
-  // Store original dimensions for alignment calculations (before multiplier effects)
-  let originalWidth = loadedImage ? loadedImage.width : (o.width ?? format.width);
-  let originalHeight = loadedImage ? loadedImage.height : (o.height ?? format.height);
-  
-  // Track size multiplier for scaling offsets proportionally
-  let sizeMultiplier = 1;
-  
-  if (loadedImage) {
-    // If useActualDimensions is true, use the image's natural size
-    if (o.useActualDimensions === true) {
-      actualWidth = loadedImage.width;
-      actualHeight = loadedImage.height;
-      
-      // Store original dimensions before multiplier effects
-      originalWidth = loadedImage.width;
-      originalHeight = loadedImage.height;
-      
-      // First, apply max constraints with original (non-multiplied) maxWidth/maxHeight
-      let originalMaxWidth = o.maxWidth;
-      let originalMaxHeight = o.maxHeight;
-      
-      // Temporary variables for max constraint calculation
-      let constrainedWidth = actualWidth;
-      let constrainedHeight = actualHeight;
-      
-      if (originalMaxWidth && constrainedWidth > originalMaxWidth) {
-        const scale = originalMaxWidth / constrainedWidth;
-        constrainedWidth = originalMaxWidth;
-        constrainedHeight = constrainedHeight * scale;
-      }
-      if (originalMaxHeight && constrainedHeight > originalMaxHeight) {
-        const scale = originalMaxHeight / constrainedHeight;
-        constrainedHeight = originalMaxHeight;
-        constrainedWidth = constrainedWidth * scale;
-      }
-      
-      // Now apply filename-based size multipliers if configured
-      let maxWidth = o.maxWidth;
-      let maxHeight = o.maxHeight;
-      if (o.filenameSizeMultipliers && layer?.selectedElement?.filename) {
-        const filename = layer.selectedElement.filename.toLowerCase();
-        for (const [pattern, multiplier] of Object.entries(o.filenameSizeMultipliers)) {
-          if (filename.includes(pattern.toLowerCase())) {
-            // Scale up the actual dimensions by the multiplier
-            actualWidth = actualWidth * multiplier;
-            actualHeight = actualHeight * multiplier;
-            // Also increase max constraints to allow the larger size
-            maxWidth = maxWidth ? maxWidth * multiplier : null;
-            maxHeight = maxHeight ? maxHeight * multiplier : null;
-            sizeMultiplier = multiplier; // Store multiplier for offset scaling
-            break; // Use first matching pattern
-          }
-        }
-      }
-      
-      // Apply max constraints with multiplied maxWidth/maxHeight for final rendering size
-      if (maxWidth && actualWidth > maxWidth) {
-        const scale = maxWidth / actualWidth;
-        actualWidth = maxWidth;
-        actualHeight = actualHeight * scale;
-      }
-      if (maxHeight && actualHeight > maxHeight) {
-        const scale = maxHeight / actualHeight;
-        actualHeight = maxHeight;
-        actualWidth = actualWidth * scale;
-      }
-    } else if (o.maintainAspectRatio && o.width && o.height) {
-      // If maintainAspectRatio is true (and not using actual dimensions),
-      // scale to fit the configured size while maintaining aspect
-      const imageAspect = loadedImage.width / loadedImage.height;
-      const configAspect = o.width / o.height;
-      if (imageAspect > configAspect) {
-        // Image is wider - fit to width
-        actualHeight = o.width / imageAspect;
-        actualWidth = o.width;
+  if (layer.name === "Background") {
+    // Background can use explicit dimensions from config
+    actualWidth = o.width ?? format.width;
+    actualHeight = o.height ?? format.height;
       } else {
-        // Image is taller - fit to height
-        actualWidth = o.height * imageAspect;
-        actualHeight = o.height;
-      }
-    }
+    // All other layers are forced to 1000x1000
+    actualWidth = format.width;
+    actualHeight = format.height;
   }
   
-  // Calculate scale early so we can use scaled dimensions for alignment offsets and other calculations
-  // This ensures alignment accounts for random scaling that will be applied
-  let scale = o.scale ?? 1.0;
-  if (o.randomScale && o.scaleRange) {
-    const [minScale, maxScale] = o.scaleRange;
-    scale = minScale + Math.random() * (maxScale - minScale);
+  // Position: draw all images at (0, 0) to preserve natural positioning
+  // The non-transparent content will appear at its natural position within the image
+  let x = 0;
+  let y = 0;
+  
+  // Background layer can use explicit coordinates if provided
+  if (layer.name === "Background" && o.x !== undefined && o.y !== undefined) {
+    x = o.x;
+    y = o.y;
   }
   
-  // Calculate scaled dimensions for alignment calculations
-  const scaledWidth = actualWidth * scale;
-  const scaledHeight = actualHeight * scale;
+  // No scaling - use configured dimensions
+  const scale = 1.0;
+  const scaledWidth = actualWidth;
+  const scaledHeight = actualHeight;
   
-  // Handle layer references for dynamic positioning
-  let x = o.x ?? 0;
-  let y = o.y ?? 0;
-  
-  // If anchorTo is specified, position relative to that layer
-  if (o.anchorTo) {
-    if (!renderedLayersMap[o.anchorTo]) {
-      // Anchor layer not found - try fallback for nose and mouth layers
-      if (layer.name === "nose") {
-        // Try to use "head" as fallback anchor if "left eye" is not available
-        if (o.anchorTo === "left eye" && renderedLayersMap["head"]) {
-          console.warn(`Warning: Nose layer cannot find anchor layer "left eye", using "head" as fallback.`);
-          // Temporarily change anchorTo to use head
-          const fallbackAnchor = renderedLayersMap["head"];
-          const anchorPoint = "bounds-center"; // Use center of head as fallback
-          const anchorX = fallbackAnchor.centerX;
-          const anchorY = fallbackAnchor.centerY;
-          // Position nose in center of head area
-          x = anchorX;
-          y = anchorY + 100; // Offset down a bit from center
-        } else {
-          console.warn(`Warning: Nose layer cannot find anchor layer "${o.anchorTo}". Using default position. This may cause the nose to not appear correctly.`);
-          // Use a fallback position - center of canvas as last resort
-          x = format.width / 2;
-          y = format.height / 2;
-        }
-      } else if (layer.name === "Mouth") {
-        // Try to use "head" as fallback anchor if "left eye" is not available
-        if (o.anchorTo === "left eye" && renderedLayersMap["head"]) {
-          console.warn(`Warning: Mouth layer cannot find anchor layer "left eye", using "head" as fallback.`);
-          const fallbackAnchor = renderedLayersMap["head"];
-          // Position mouth below center of head
-          const anchorX = fallbackAnchor.centerX;
-          const anchorY = fallbackAnchor.centerY;
-          // Position mouth in lower portion of head area
-          x = anchorX;
-          y = anchorY + 200; // Offset down from center (below nose)
-        } else if (renderedLayersMap["head"]) {
-          console.warn(`Warning: Mouth layer cannot find anchor layer "${o.anchorTo}", using "head" as fallback.`);
-          const fallbackAnchor = renderedLayersMap["head"];
-          x = fallbackAnchor.centerX;
-          y = fallbackAnchor.centerY + 200;
-        } else {
-          console.warn(`Warning: Mouth layer cannot find anchor layer "${o.anchorTo}". Using default position. This may cause the mouth to not appear correctly.`);
-          // Use a fallback position - center-bottom of canvas as last resort
-          x = format.width / 2;
-          y = format.height / 2 + 100;
-        }
-      } else {
-        console.warn(`Warning: Layer ${layer.name} cannot find anchor layer "${o.anchorTo}". Using default position.`);
-      }
-    } else {
-    const anchorLayer = renderedLayersMap[o.anchorTo];
-    if (!anchorLayer) {
-      console.warn(`Warning: Layer ${layer.name} cannot find anchor layer "${o.anchorTo}". Available layers: ${Object.keys(renderedLayersMap).join(', ')}`);
-      // Use default position
-      x = format.width / 2;
-      y = format.height / 2;
-    } else {
-      // Debug logging for hat layer to verify it's using the correct head
-      // if (layer.name === "hat" && o.anchorTo) {
-      //   console.log(`[DEBUG] Hat anchoring to "${o.anchorTo}":`, {
-      //     anchorLayer: {
-      //       name: o.anchorTo,
-      //       x: anchorLayer.x,
-      //       y: anchorLayer.y,
-      //       width: anchorLayer.width,
-      //       height: anchorLayer.height,
-      //       boundsTop: anchorLayer.bounds?.top,
-      //       boundsBottom: anchorLayer.bounds?.bottom,
-      //     },
-      //     availableHeads: Object.keys(renderedLayersMap).filter(k => k.startsWith('head')).map(k => ({
-      //       name: k,
-      //       y: renderedLayersMap[k].y,
-      //       height: renderedLayersMap[k].height,
-      //       boundsTop: renderedLayersMap[k].bounds?.top,
-      //     }))
-      //   });
-      // }
-    const anchorPoint = o.anchorPoint || 'center';
-    const useBounds = o.useBounds !== false; // Default to true - use bounding box if available
-    
-    // Determine if we should use bounding box or image bounds
-    const useBoundingBox = useBounds && anchorLayer.bounds;
-    const bounds = useBoundingBox ? anchorLayer.bounds : null;
-    
-    let anchorX, anchorY;
-    
-    // Calculate anchor point - prefer bounding box if available and useBounds is true
-    if (useBoundingBox && bounds) {
-      // Use bounding box coordinates (relative to image, need to add layer position)
-      // Calculate scale factors based on actual rendered dimensions vs original image dimensions
-      // This properly accounts for maintainAspectRatio and other scaling factors
-      const originalWidth = anchorLayer.originalWidth || anchorLayer.width;
-      const originalHeight = anchorLayer.originalHeight || anchorLayer.height;
-      const scaleX = anchorLayer.width / originalWidth;
-      const scaleY = anchorLayer.height / originalHeight;
-      
-      // Ensure we have valid scale factors (avoid division by zero)
-      const safeScaleX = isNaN(scaleX) || !isFinite(scaleX) ? 1 : scaleX;
-      const safeScaleY = isNaN(scaleY) || !isFinite(scaleY) ? 1 : scaleY;
-      
-      switch (anchorPoint) {
-        case 'top-left':
-        case 'bounds-top-left':
-          anchorX = anchorLayer.x + bounds.left * safeScaleX;
-          anchorY = anchorLayer.y + bounds.top * safeScaleY;
-          break;
-        case 'top-right':
-        case 'bounds-top-right':
-          anchorX = anchorLayer.x + bounds.right * safeScaleX;
-          anchorY = anchorLayer.y + bounds.top * safeScaleY;
-          break;
-        case 'bottom-left':
-        case 'bounds-bottom-left':
-          anchorX = anchorLayer.x + bounds.left * safeScaleX;
-          anchorY = anchorLayer.y + bounds.bottom * safeScaleY;
-          break;
-        case 'bottom-right':
-        case 'bounds-bottom-right':
-          anchorX = anchorLayer.x + bounds.right * safeScaleX;
-          anchorY = anchorLayer.y + bounds.bottom * safeScaleY;
-          break;
-        case 'top':
-        case 'bounds-top':
-          anchorX = anchorLayer.x + bounds.centerX * safeScaleX;
-          anchorY = anchorLayer.y + bounds.top * safeScaleY;
-          break;
-        case 'bottom':
-        case 'bounds-bottom':
-          anchorX = anchorLayer.x + bounds.centerX * safeScaleX;
-          anchorY = anchorLayer.y + bounds.bottom * safeScaleY;
-          break;
-        case 'left':
-        case 'bounds-left':
-          anchorX = anchorLayer.x + bounds.left * safeScaleX;
-          anchorY = anchorLayer.y + bounds.centerY * safeScaleY;
-          break;
-        case 'right':
-        case 'bounds-right':
-          anchorX = anchorLayer.x + bounds.right * safeScaleX;
-          anchorY = anchorLayer.y + bounds.centerY * safeScaleY;
-          break;
-        case 'center':
-        case 'bounds-center':
-        default:
-          anchorX = anchorLayer.x + bounds.centerX * safeScaleX;
-          anchorY = anchorLayer.y + bounds.centerY * safeScaleY;
-          break;
-      }
-    } else {
-      // Use image bounds (original behavior)
-      switch (anchorPoint) {
-        case 'top-left':
-          anchorX = anchorLayer.x;
-          anchorY = anchorLayer.y;
-          break;
-        case 'top-right':
-          anchorX = anchorLayer.right;
-          anchorY = anchorLayer.y;
-          break;
-        case 'bottom-left':
-          anchorX = anchorLayer.x;
-          anchorY = anchorLayer.bottom;
-          break;
-        case 'bottom-right':
-          anchorX = anchorLayer.right;
-          anchorY = anchorLayer.bottom;
-          break;
-        case 'top':
-          anchorX = anchorLayer.centerX;
-          anchorY = anchorLayer.y;
-          break;
-        case 'bottom':
-          anchorX = anchorLayer.centerX;
-          anchorY = anchorLayer.bottom;
-          break;
-        case 'left':
-          anchorX = anchorLayer.x;
-          anchorY = anchorLayer.centerY;
-          break;
-        case 'right':
-          anchorX = anchorLayer.right;
-          anchorY = anchorLayer.centerY;
-          break;
-        case 'center':
-        default:
-          anchorX = anchorLayer.centerX;
-          anchorY = anchorLayer.centerY;
-          break;
-      }
-    }
-    
-    // Get bounding box for current layer early (needed for relative offsets that use both sizes)
-    // Calculate bounds after determining final dimensions, with configurable alpha threshold
-    const useBoundsForAlign = o.useBounds !== false && loadedImage;
-    let currentBounds = null;
-    if (useBoundsForAlign && loadedImage) {
-      // Use layer-specific alpha threshold if configured, otherwise default to 1
-      const alphaThreshold = o.alphaThreshold !== undefined ? o.alphaThreshold : 1;
-      currentBounds = getImageBounds(loadedImage, alphaThreshold);
-    }
-    
-    // Calculate position relative to anchor
-    // offsetX/Y are offsets from the anchor point
-    // relativeOffsetX/Y are multipliers of layer dimensions (for size-relative positioning)
-    // By default uses anchor layer size, but can use both anchor and current layer sizes
-    let offsetX = o.offsetX ?? 0;
-    let offsetY = o.offsetY ?? 0;
-    
-    // Apply filename-based Y offset override if specified
-    if (o.filenameOffsetY && layer?.selectedElement?.filename) {
-      const filename = layer.selectedElement.filename.toLowerCase();
-      for (const [pattern, override] of Object.entries(o.filenameOffsetY)) {
-        if (filename.includes(pattern.toLowerCase())) {
-          offsetY += override;
-          break; // Use first matching pattern
-        }
-      }
-    }
-    
-    // Apply relative offsets if specified
-    if (o.relativeOffsetX !== undefined && o.relativeOffsetX !== null) {
-      // Calculate anchor layer size
-      const useBoundingBox = o.useBounds !== false && anchorLayer.bounds;
-      const anchorSize = useBoundingBox && anchorLayer.bounds
-        ? (anchorLayer.bounds.right - anchorLayer.bounds.left) * (anchorLayer.width / (anchorLayer.originalWidth || anchorLayer.width))
-        : anchorLayer.width;
-      
-      // Calculate current layer size if using both sizes
-      let currentSize = anchorSize;
-      if (o.relativeOffsetUseBoth !== false && loadedImage) {
-        const useCurrentBounds = o.useBounds !== false && currentBounds;
-        const currentLayerSize = useCurrentBounds && currentBounds
-          ? (currentBounds.right - currentBounds.left) * (scaledWidth / loadedImage.width)
-          : scaledWidth;
-        // Use average of both sizes
-        currentSize = (anchorSize + currentLayerSize) / 2;
-      }
-      
-      offsetX += o.relativeOffsetX * currentSize;
-    }
-    
-    if (o.relativeOffsetY !== undefined && o.relativeOffsetY !== null) {
-      // Calculate anchor layer size
-      const useBoundingBox = o.useBounds !== false && anchorLayer.bounds;
-      const anchorSize = useBoundingBox && anchorLayer.bounds
-        ? (anchorLayer.bounds.bottom - anchorLayer.bounds.top) * (anchorLayer.height / (anchorLayer.originalHeight || anchorLayer.height))
-        : anchorLayer.height;
-      
-      // Calculate current layer size if using both sizes
-      let currentSize = anchorSize;
-      if (o.relativeOffsetUseBoth !== false && loadedImage) {
-        const useCurrentBounds = o.useBounds !== false && currentBounds;
-        const currentLayerSize = useCurrentBounds && currentBounds
-          ? (currentBounds.bottom - currentBounds.top) * (scaledHeight / loadedImage.height)
-          : scaledHeight;
-        // Use average of both sizes
-        currentSize = (anchorSize + currentLayerSize) / 2;
-      }
-      
-      offsetY += o.relativeOffsetY * currentSize;
-    }
-    
-    // Apply percentage-based offset if specified (relative to current layer's height)
-    // Prefer bounding box height if available (more accurate for content with transparent padding)
-    if (o.offsetYPercent !== undefined && o.offsetYPercent !== null) {
-      // Check for filename-based override
-      let effectiveOffsetYPercent = o.offsetYPercent;
-      if (o.filenameOffsetYPercent && layer?.selectedElement?.filename) {
-        const filename = layer.selectedElement.filename.toLowerCase();
-        for (const [pattern, override] of Object.entries(o.filenameOffsetYPercent)) {
-          if (filename.includes(pattern.toLowerCase())) {
-            effectiveOffsetYPercent = override;
-            break;
-          }
-        }
-      }
-      
-      let heightForPercent = scaledHeight;
-      if (useBoundsForAlign && currentBounds && loadedImage) {
-        // Use bounding box height, scaled to match rendered size (same scaling as relativeOffsetY)
-        const bboxHeight = (currentBounds.bottom - currentBounds.top) * (scaledHeight / loadedImage.height);
-        heightForPercent = bboxHeight;
-      }
-      offsetY += effectiveOffsetYPercent * heightForPercent;
-    }
-    
-    // align determines how this layer aligns to the anchor point
-    const align = o.align || 'center';
-    
-    // Calculate alignment offset based on whether we're using bounds or image edges
-    let alignOffsetX = 0;
-    let alignOffsetY = 0;
-    
-    if (useBoundsForAlign && currentBounds) {
-      // Use bounding box for alignment
-      // Calculate scale factors based on scaled rendered dimensions vs original image dimensions
-      // Use scaledWidth/scaledHeight (matching final rendered size with random scale) so alignment offset correctly positions
-      // the bounding box point.
-      const scaleX = scaledWidth / originalWidth;
-      const scaleY = scaledHeight / originalHeight;
-      
-      // Ensure we have valid scale factors (avoid division by zero)
-      const safeAlignScaleX = isNaN(scaleX) || !isFinite(scaleX) ? 1 : scaleX;
-      const safeAlignScaleY = isNaN(scaleY) || !isFinite(scaleY) ? 1 : scaleY;
-      
-      // The alignment offset positions the image so that the specified bounding box point
-      // ends up at the anchor point. We calculate the position of the bounding box point
-      // relative to the image's top-left corner, then negate it.
-      
-      switch (align) {
-        case 'top-left':
-        case 'bounds-top-left':
-          alignOffsetX = -currentBounds.left * safeAlignScaleX;
-          alignOffsetY = -currentBounds.top * safeAlignScaleY;
-          break;
-        case 'top-right':
-        case 'bounds-top-right':
-          alignOffsetX = -currentBounds.right * safeAlignScaleX;
-          alignOffsetY = -currentBounds.top * safeAlignScaleY;
-          break;
-        case 'bottom-left':
-        case 'bounds-bottom-left':
-          alignOffsetX = -currentBounds.left * safeAlignScaleX;
-          alignOffsetY = -currentBounds.bottom * safeAlignScaleY;
-          break;
-        case 'bottom-right':
-        case 'bounds-bottom-right':
-          alignOffsetX = -currentBounds.right * safeAlignScaleX;
-          alignOffsetY = -currentBounds.bottom * safeAlignScaleY;
-          break;
-        case 'top':
-        case 'bounds-top':
-          alignOffsetX = -currentBounds.centerX * safeAlignScaleX;
-          alignOffsetY = -currentBounds.top * safeAlignScaleY;
-          break;
-        case 'bottom':
-        case 'bounds-bottom':
-          alignOffsetX = -currentBounds.centerX * safeAlignScaleX;
-          alignOffsetY = -currentBounds.bottom * safeAlignScaleY;
-          break;
-        case 'left':
-        case 'bounds-left':
-          alignOffsetX = -currentBounds.left * safeAlignScaleX;
-          alignOffsetY = -currentBounds.centerY * safeAlignScaleY;
-          break;
-        case 'right':
-        case 'bounds-right':
-          alignOffsetX = -currentBounds.right * safeAlignScaleX;
-          alignOffsetY = -currentBounds.centerY * safeAlignScaleY;
-          break;
-        case 'center':
-        case 'bounds-center':
-        default:
-          alignOffsetX = -currentBounds.centerX * safeAlignScaleX;
-          alignOffsetY = -currentBounds.centerY * safeAlignScaleY;
-          break;
-      }
-    } else {
-      // Use image edges for alignment (original behavior)
-      // Use scaled rendered dimensions (matching final rendered size with random scale) for alignment offset
-      
-      switch (align) {
-        case 'top-left':
-          alignOffsetX = 0;
-          alignOffsetY = 0;
-          break;
-        case 'top-right':
-          alignOffsetX = -scaledWidth;
-          alignOffsetY = 0;
-          break;
-        case 'bottom-left':
-          alignOffsetX = 0;
-          alignOffsetY = -scaledHeight;
-          break;
-        case 'bottom-right':
-          alignOffsetX = -scaledWidth;
-          alignOffsetY = -scaledHeight;
-          break;
-        case 'top':
-          alignOffsetX = -scaledWidth / 2;
-          alignOffsetY = 0;
-          break;
-        case 'bottom':
-          alignOffsetX = -scaledWidth / 2;
-          alignOffsetY = -scaledHeight;
-          break;
-        case 'left':
-          alignOffsetX = 0;
-          alignOffsetY = -scaledHeight / 2;
-          break;
-        case 'right':
-          alignOffsetX = -scaledWidth;
-          alignOffsetY = -scaledHeight / 2;
-          break;
-        case 'center':
-        default:
-          alignOffsetX = -scaledWidth / 2;
-          alignOffsetY = -scaledHeight / 2;
-          break;
-      }
-    }
-    
-    // Final position = anchor point + alignment offset + user offset
-    x = anchorX + alignOffsetX + offsetX;
-    y = anchorY + alignOffsetY + offsetY;
-    }
-    }
-  }
-  
-  // Check if constraints should be disabled for this filename
-  let shouldConstrain = o.constrainToBounds !== undefined && o.constrainToBounds !== null;
-  if (shouldConstrain && o.filenameDisableConstraints && layer?.selectedElement?.filename) {
-    const filename = layer.selectedElement.filename.toLowerCase();
-    for (const pattern of Object.keys(o.filenameDisableConstraints)) {
-      if (filename.includes(pattern.toLowerCase())) {
-        shouldConstrain = false;
-        break;
-      }
-    }
-  }
-  
-  // Constrain to bounds if specified (e.g., keep features within head's bounding box)
-  if (shouldConstrain && o.constrainToBounds && renderedLayersMap[o.constrainToBounds]) {
-    const constraintLayer = renderedLayersMap[o.constrainToBounds];
-    const useConstraintBounds = constraintLayer.bounds;
-    
-    if (useConstraintBounds) {
-      // Get the constraint layer's bounding box in canvas coordinates
-      const constraintScaleX = constraintLayer.width / (constraintLayer.originalWidth || constraintLayer.width);
-      const constraintScaleY = constraintLayer.height / (constraintLayer.originalHeight || constraintLayer.height);
-      
-      // Ensure we have valid scale factors (avoid division by zero)
-      const safeConstraintScaleX = isNaN(constraintScaleX) || !isFinite(constraintScaleX) ? 1 : constraintScaleX;
-      const safeConstraintScaleY = isNaN(constraintScaleY) || !isFinite(constraintScaleY) ? 1 : constraintScaleY;
-      
-      const constraintLeft = constraintLayer.x + constraintLayer.bounds.left * safeConstraintScaleX;
-      const constraintTop = constraintLayer.y + constraintLayer.bounds.top * safeConstraintScaleY;
-      const constraintRight = constraintLayer.x + constraintLayer.bounds.right * safeConstraintScaleX;
-      const constraintBottom = constraintLayer.y + constraintLayer.bounds.bottom * safeConstraintScaleY;
-      
-      // Get current layer's bounding box if available, otherwise use image edges
-      // Use layer-specific alpha threshold if configured
-      let currentBounds = null;
-      if (loadedImage) {
-        const alphaThreshold = o.alphaThreshold !== undefined ? o.alphaThreshold : 1;
-        currentBounds = getImageBounds(loadedImage, alphaThreshold);
-      }
-      
-      let layerLeft, layerTop, layerRight, layerBottom;
-      
-      if (currentBounds && o.useBounds !== false) {
-        // Use bounding box for constraint checking
-        // Use scaled dimensions to account for random scaling
-        const layerScaleX = scaledWidth / loadedImage.width;
-        const layerScaleY = scaledHeight / loadedImage.height;
-        
-        // Ensure we have valid scale factors
-        const safeLayerScaleX = isNaN(layerScaleX) || !isFinite(layerScaleX) ? 1 : layerScaleX;
-        const safeLayerScaleY = isNaN(layerScaleY) || !isFinite(layerScaleY) ? 1 : layerScaleY;
-        
-        layerLeft = x + currentBounds.left * safeLayerScaleX;
-        layerTop = y + currentBounds.top * safeLayerScaleY;
-        layerRight = x + currentBounds.right * safeLayerScaleX;
-        layerBottom = y + currentBounds.bottom * safeLayerScaleY;
-      } else {
-        // Use image edges for constraint checking
-        // Use scaled dimensions to account for random scaling
-        layerLeft = x;
-        layerTop = y;
-        layerRight = x + scaledWidth;
-        layerBottom = y + scaledHeight;
-      }
-      
-      // Adjust position to keep within bounds
-      if (layerLeft < constraintLeft) {
-        x += constraintLeft - layerLeft;
-      }
-      if (layerTop < constraintTop) {
-        y += constraintTop - layerTop;
-      }
-      if (layerRight > constraintRight) {
-        x -= layerRight - constraintRight;
-      }
-      if (layerBottom > constraintBottom) {
-        y -= layerBottom - constraintBottom;
-      }
-    }
-  }
-  
-  // Handle random positioning
-  
-  if (o.randomPosition) {
-    // Use scaled dimensions for random positioning to account for random scaling
-    const width = scaledWidth;
-    const height = scaledHeight;
-    
-    // For Props, try to find a position that doesn't overlap with Body
-    if (layer.name === "Prop" && bodyMaskData) {
-      let attempts = 0;
-      const maxAttempts = 50; // Try up to 50 times to find a non-overlapping position
-      let foundPosition = false;
-      
-      while (attempts < maxAttempts && !foundPosition) {
-        // Random position anywhere on canvas
-        x = Math.random() * format.width - width / 2;
-        y = Math.random() * format.height - height / 2;
-        
-        // Apply position jitter if specified
-        if (o.positionJitter) {
-          x += (Math.random() - 0.5) * o.positionJitter;
-          y += (Math.random() - 0.5) * o.positionJitter;
-        }
-        
-        // Check overlap (we'll check this later in drawElement with the actual image)
-        // For now, just use this position
-        foundPosition = true;
-        attempts++;
-      }
-    } else {
-      // Random position anywhere on canvas, allowing props to go partially off-canvas
-      x = Math.random() * format.width - width / 2;
-      y = Math.random() * format.height - height / 2;
-      
-      // Apply position jitter if specified
-      if (o.positionJitter) {
-        x += (Math.random() - 0.5) * o.positionJitter;
-        y += (Math.random() - 0.5) * o.positionJitter;
-      }
-    }
-  } else if (o.positionJitter) {
-    // Apply jitter to fixed positions
-    x += (Math.random() - 0.5) * o.positionJitter;
-    y += (Math.random() - 0.5) * o.positionJitter;
-  }
-  
-  // Apply baseline jitter (vertical-only offset) for random baseline variation
-  // Use shared jitter value for layers with the same name to ensure consistency
-  if (o.baselineJitter) {
-    // Check if a baseline jitter value already exists for this layer name
-    if (!baselineJitterMap[layer.name]) {
-      // Generate and store a shared baseline jitter value for this layer name
-      baselineJitterMap[layer.name] = (Math.random() - 0.5) * o.baselineJitter;
-    }
-    // Use the shared baseline jitter value
-    y += baselineJitterMap[layer.name];
-  }
-  
-  // Scale was already calculated earlier for alignment calculations
-  // No need to recalculate here, it's already set above
   
   // Handle random opacity
   let opacity = o.opacity ?? layer.opacity ?? 1;
@@ -1047,6 +455,11 @@ const getLayerOpts = (layer, bodyMaskData = null, loadedImage = null, renderedLa
   
   // Apply difference blend mode to all layers if global flag is enabled
   if (applyDifferenceToAllLayers) {
+    blend = "difference";
+  }
+  
+  // Apply difference blend mode to specific layers if they're in the differenceBlendLayers set
+  if (differenceBlendLayers && differenceBlendLayers.has(layer.name)) {
     blend = "difference";
   }
   
@@ -1124,7 +537,9 @@ const drawElement = (renderObj, index, layersLen) => {
   if (renderObj.layerOpts) {
     layerOpts = renderObj.layerOpts;
   } else {
-    layerOpts = getLayerOpts(layer, bodyMask, loadedImage, renderedLayers, baselineJitterMap);
+    // Get differenceBlendLayers from renderObj if available, otherwise use empty Set
+    const differenceBlendLayers = renderObj.differenceBlendLayers || null;
+    layerOpts = getLayerOpts(layer, bodyMask, loadedImage, renderedLayers, baselineJitterMap, differenceBlendLayers);
     renderObj.layerOpts = layerOpts; // Store for reuse
   }
   
@@ -1236,6 +651,7 @@ const drawElement = (renderObj, index, layersLen) => {
     ctx.shadowOffsetY = finalShadowOffsetY;
     ctx.shadowColor = finalShadowColor;
 
+    // Draw Props at natural position
     if (!angle) {
       ctx.drawImage(loadedImage, finalX, finalY, scaledWidth, scaledHeight);
     } else {
@@ -1298,10 +714,10 @@ const drawElement = (renderObj, index, layersLen) => {
       ctx.globalCompositeOperation = "source-over";
 
       if (!angle) {
-        ctx.drawImage(overlayCanvas, finalX, finalY, scaledWidth, scaledHeight);
+        ctx.drawImage(overlayCanvas, propDrawX, propDrawY, scaledWidth, scaledHeight);
       } else {
-        const cx = finalX + scaledWidth / 2;
-        const cy = finalY + scaledHeight / 2;
+        const cx = propDrawX + scaledWidth / 2;
+        const cy = propDrawY + scaledHeight / 2;
         ctx.translate(cx, cy);
         ctx.rotate(angle);
         ctx.drawImage(overlayCanvas, -scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight);
@@ -1346,13 +762,16 @@ const drawElement = (renderObj, index, layersLen) => {
   ctx.shadowOffsetY = finalShadowOffsetY;
   ctx.shadowColor = finalShadowColor;
 
-  // Draw the image
+  // Draw the image at natural position (0,0) to preserve natural content positioning
+  const drawX = x + jx;
+  const drawY = y + jy;
+  
   if (!angle) {
-    ctx.drawImage(loadedImage, x + jx, y + jy, scaledWidth, scaledHeight);
+    ctx.drawImage(loadedImage, drawX, drawY, scaledWidth, scaledHeight);
   } else {
     ctx.save();
-    const cx = x + jx + scaledWidth / 2;
-    const cy = y + jy + scaledHeight / 2;
+    const cx = drawX + scaledWidth / 2;
+    const cy = drawY + scaledHeight / 2;
     ctx.translate(cx, cy);
     ctx.rotate(angle);
     ctx.drawImage(loadedImage, -scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight);
@@ -1426,10 +845,10 @@ const drawElement = (renderObj, index, layersLen) => {
     ctx.globalCompositeOperation = "source-over";
 
     if (!angle) {
-      ctx.drawImage(overlayCanvas, x + jx, y + jy, scaledWidth, scaledHeight);
+      ctx.drawImage(overlayCanvas, drawX, drawY, scaledWidth, scaledHeight);
     } else {
-      const cx = x + jx + scaledWidth / 2;
-      const cy = y + jy + scaledHeight / 2;
+      const cx = drawX + scaledWidth / 2;
+      const cy = drawY + scaledHeight / 2;
       ctx.translate(cx, cy);
       ctx.rotate(angle);
       ctx.drawImage(overlayCanvas, -scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight);
@@ -1442,6 +861,257 @@ const drawElement = (renderObj, index, layersLen) => {
   ctx.globalCompositeOperation = "source-over";
 
   addAttributes(renderObj);
+};
+
+/* ---------- Layer Scrambling ---------- */
+
+/**
+ * Weighted random selection from an array of items with weights
+ * @param {Array} items - Array of items to select from
+ * @param {Function} getWeight - Function that returns weight for an item (higher weight = more likely)
+ * @returns {*} Selected item
+ */
+const weightedRandomSelect = (items, getWeight) => {
+  if (items.length === 0) return null;
+  if (items.length === 1) return items[0];
+  
+  // Calculate weights
+  const weights = items.map(item => {
+    const weight = getWeight(item);
+    return Math.max(0, weight); // Ensure non-negative
+  });
+  
+  // Calculate total weight
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+  
+  if (totalWeight === 0) {
+    // If all weights are zero, fall back to uniform random
+    return items[Math.floor(Math.random() * items.length)];
+  }
+  
+  // Normalize weights
+  const normalizedWeights = weights.map(w => w / totalWeight);
+  
+  // Weighted random selection
+  const random = Math.random();
+  let cumulative = 0;
+  
+  for (let i = 0; i < items.length; i++) {
+    cumulative += normalizedWeights[i];
+    if (random <= cumulative) {
+      return items[i];
+    }
+  }
+  
+  // Fallback (shouldn't reach here)
+  return items[items.length - 1];
+};
+
+/**
+ * Scrambles the order of layers in the renderObjectArray based on configuration
+ * @param {Array} renderObjectArray - Array of render objects to scramble
+ * @param {Object} config - Scrambling configuration
+ * @param {boolean} config.scrambleLayers - Whether to enable scrambling
+ * @param {Array<string>} config.scrambleLayerNames - Array of layer names to scramble (empty = all)
+ * @param {boolean} config.respectAnchorDependencies - Whether to respect anchorTo dependencies
+ * @param {boolean} backgroundGenerate - Whether background.generate is enabled
+ * @returns {Array} Scrambled array of render objects
+ */
+const scrambleLayerOrder = (renderObjectArray, config, backgroundGenerate) => {
+  // If scrambling is disabled, return original array
+  if (!config.scrambleLayers) {
+    return renderObjectArray;
+  }
+
+  const { scrambleLayerNames, respectAnchorDependencies } = config;
+
+  // Separate Background layer if background.generate is true
+  let backgroundLayer = null;
+  let layersToScramble = [];
+  
+  if (backgroundGenerate) {
+    const backgroundIndex = renderObjectArray.findIndex(
+      obj => obj.layer && obj.layer.name === "Background"
+    );
+    if (backgroundIndex !== -1) {
+      backgroundLayer = renderObjectArray[backgroundIndex];
+      layersToScramble = renderObjectArray.filter((_, index) => index !== backgroundIndex);
+    } else {
+      layersToScramble = [...renderObjectArray];
+    }
+  } else {
+    layersToScramble = [...renderObjectArray];
+  }
+
+  // Determine which layers should be scrambled
+  let layersToScrambleIndices = [];
+  if (scrambleLayerNames.length === 0) {
+    // Empty array means scramble all layers
+    layersToScrambleIndices = layersToScramble.map((_, index) => index);
+  } else {
+    // Only scramble specified layers
+    layersToScrambleIndices = layersToScramble
+      .map((obj, index) => {
+        const layerName = obj.layer?.name || obj.layer?.options?.displayName;
+        const shouldScramble = scrambleLayerNames.includes(layerName);
+        if (debugLogs && shouldScramble) {
+          console.log(`Layer "${layerName}" (index ${index}) will be scrambled`);
+        }
+        return shouldScramble ? index : null;
+      })
+      .filter(index => index !== null);
+  }
+
+  if (layersToScrambleIndices.length === 0) {
+    // No layers to scramble, return original array
+    return renderObjectArray;
+  }
+
+  // Calculate coverage percentages for layers being scrambled
+  const layersToScrambleWithCoverage = layersToScramble.map((obj, index) => {
+    let coveragePercentage = 0.5; // Default to 50% if image not available
+    if (obj.loadedImage) {
+      const layerOptions = obj.layer?.options || {};
+      const alphaThreshold = layerOptions.alphaThreshold !== undefined ? layerOptions.alphaThreshold : 1;
+      coveragePercentage = calculateCoveragePercentage(obj.loadedImage, alphaThreshold);
+      // Store coverage percentage in the render object
+      obj.coveragePercentage = coveragePercentage;
+    }
+    return { obj, index, coveragePercentage };
+  });
+
+  // If respecting anchor dependencies, build dependency graph
+  if (respectAnchorDependencies) {
+    // Build a map of layer names to indices
+    const layerNameToIndex = new Map();
+    layersToScramble.forEach((obj, index) => {
+      const layerName = obj.layer?.name || obj.layer?.options?.displayName;
+      if (!layerNameToIndex.has(layerName)) {
+        layerNameToIndex.set(layerName, []);
+      }
+      layerNameToIndex.get(layerName).push(index);
+    });
+
+    // Build dependency graph: which layers depend on which
+    const dependencies = new Map(); // Map<index, Set<index>> - which indices must come before this index
+    layersToScramble.forEach((obj, index) => {
+      const anchorTo = obj.layer?.options?.anchorTo;
+      if (anchorTo) {
+        const anchorIndices = layerNameToIndex.get(anchorTo) || [];
+        anchorIndices.forEach(anchorIndex => {
+          if (!dependencies.has(index)) {
+            dependencies.set(index, new Set());
+          }
+          dependencies.get(index).add(anchorIndex);
+        });
+      }
+    });
+
+    // Topological sort: shuffle while respecting dependencies, with coverage bias
+    const shuffled = [];
+    const remaining = new Set(layersToScrambleIndices);
+
+    const canAdd = (index) => {
+      const deps = dependencies.get(index);
+      if (!deps || deps.size === 0) return true;
+      // Check if all dependencies are already in shuffled
+      return Array.from(deps).every(depIndex => shuffled.includes(depIndex));
+    };
+
+    while (remaining.size > 0) {
+      const available = Array.from(remaining).filter(index => canAdd(index));
+      if (available.length === 0) {
+        // Circular dependency or missing anchor - add remaining layers anyway
+        available.push(...Array.from(remaining));
+      }
+      
+      // Sort available layers by coverage (descending: largest first, smallest last)
+      // We want smallest coverage LAST in array (rendered last = on top)
+      const availableWithCoverage = available.map(index => ({
+        index,
+        coverage: layersToScramble[index].coveragePercentage || 0.5
+      }));
+      
+      // Sort by coverage ascending (smallest first, largest last)
+      // User reports large hats are currently on top, which means large is last in array
+      // To fix: we want small on top, so small should be last
+      // So we need to reverse: sort descending (largest first) so smallest ends up last
+      availableWithCoverage.sort((a, b) => b.coverage - a.coverage);
+      
+      // Select the layer with largest coverage (first in sorted array) to push first (renders bottom)
+      // This builds the array so largest is first (bottom), smallest is last (top)
+      const selected = availableWithCoverage[0];
+      
+      shuffled.push(selected.index);
+      remaining.delete(selected.index);
+    }
+
+    // Reorder layersToScramble based on shuffled indices
+    const reordered = shuffled.map(index => layersToScramble[index]);
+    
+    // Reconstruct array with Background first if it exists
+    if (backgroundLayer) {
+      return [backgroundLayer, ...reordered];
+    }
+    return reordered;
+  } else {
+    // Strict ordering by coverage - ignore dependencies
+    if (scrambleLayerNames.length === 0) {
+      // Scramble all layers - sort by coverage (descending: largest first, smallest last)
+      // This ensures smallest coverage layers are last (rendered last = on top)
+      const sorted = [...layersToScramble].sort((a, b) => {
+        const coverageA = a.coveragePercentage || 0.5;
+        const coverageB = b.coveragePercentage || 0.5;
+        return coverageB - coverageA; // Descending: larger coverage first
+      });
+      
+      // Reconstruct array with Background first if it exists
+      if (backgroundLayer) {
+        return [backgroundLayer, ...sorted];
+      }
+      return sorted;
+    } else {
+      // Only scramble specific layers - shuffle only the scrambled layers among themselves
+      // Non-scrambled layers stay exactly in their original positions
+      const scrambledIndices = new Set(layersToScrambleIndices);
+      
+      // Extract scrambled layers with their coverage percentages
+      const scrambledLayers = layersToScrambleIndices.map(index => layersToScramble[index]);
+
+      // Strict sort by coverage (descending: largest first, smallest last)
+      // This ensures smallest coverage layers are last (rendered last = on top)
+      const sortedScrambledLayers = [...scrambledLayers].sort((a, b) => {
+        const coverageA = a.coveragePercentage || 0.5;
+        const coverageB = b.coveragePercentage || 0.5;
+        return coverageB - coverageA; // Descending: larger coverage first
+      });
+
+      // Reconstruct array: rebuild entire array with scrambled layers in sorted order
+      // Non-scrambled layers stay in their original positions
+      const result = [];
+      const scrambledSet = new Set(layersToScrambleIndices);
+      let scrambledIdx = 0;
+      
+      // Build result array: for each position, either keep non-scrambled layer or take next sorted scrambled layer
+      for (let i = 0; i < layersToScramble.length; i++) {
+        if (scrambledSet.has(i)) {
+          // This position was scrambled - use next sorted scrambled layer
+          if (scrambledIdx < sortedScrambledLayers.length) {
+            result.push(sortedScrambledLayers[scrambledIdx++]);
+          }
+        } else {
+          // This position was not scrambled - keep original layer
+          result.push(layersToScramble[i]);
+        }
+      }
+
+      // Reconstruct array with Background first if it exists
+      if (backgroundLayer) {
+        return [backgroundLayer, ...result];
+      }
+      return result;
+    }
+  }
 };
 
 /* ---------- DNA / Generation ---------- */
@@ -1940,7 +1610,17 @@ const startCreating = async () => {
       // Filter out layers without a selectedElement before loading
       let validResults = results.filter((layer) => layer.selectedElement !== undefined);
       
-      let loadedElements = validResults.map((layer) => loadLayerImg(layer));
+      // Difference blend mode disabled
+      const differenceBlendLayers = null;
+      
+      let loadedElements = validResults.map((layer) => {
+        const renderObj = loadLayerImg(layer);
+        // Attach differenceBlendLayers info to each render object
+        return renderObj.then(obj => {
+          obj.differenceBlendLayers = differenceBlendLayers;
+          return obj;
+        });
+      });
       await Promise.all(loadedElements).catch((error) => {
         console.error(`Error loading layers for edition ${abstractedIndexes[0]}:`, error);
         throw error;
@@ -1951,6 +1631,26 @@ const startCreating = async () => {
         renderedLayers = {};
         // Reset baseline jitter map to share consistent jitter values across layers with the same name
         baselineJitterMap = {};
+        
+        // Apply layer scrambling if enabled
+        const currentConfig = layerConfigurations[layerConfigIndex];
+        const scrambleConfig = {
+          scrambleLayers: currentConfig.scrambleLayers !== undefined 
+            ? currentConfig.scrambleLayers 
+            : scrambleLayers,
+          scrambleLayerNames: currentConfig.scrambleLayerNames !== undefined
+            ? currentConfig.scrambleLayerNames
+            : scrambleLayerNames,
+          respectAnchorDependencies: currentConfig.respectAnchorDependencies !== undefined
+            ? currentConfig.respectAnchorDependencies
+            : respectAnchorDependencies,
+        };
+        
+        const scrambledRenderArray = scrambleLayerOrder(
+          renderObjectArray,
+          scrambleConfig,
+          background.generate
+        );
         
         if (gif.export) {
           hashlipsGiffer = new HashlipsGiffer(
@@ -1965,7 +1665,7 @@ const startCreating = async () => {
         }
         if (background.generate) drawBackground();
 
-        renderObjectArray.forEach((renderObject, index) => {
+        scrambledRenderArray.forEach((renderObject, index) => {
           // Skip if no image was loaded
           if (!renderObject.loadedImage) {
             console.warn(`Warning: No image loaded for layer ${renderObject.layer.name} in edition ${abstractedIndexes[0]}`);
@@ -1974,7 +1674,7 @@ const startCreating = async () => {
           
           // Get layer options once and store them for reuse
           if (!renderObject.layerOpts) {
-            renderObject.layerOpts = getLayerOpts(renderObject.layer, bodyMask, renderObject.loadedImage, renderedLayers, baselineJitterMap);
+            renderObject.layerOpts = getLayerOpts(renderObject.layer, bodyMask, renderObject.loadedImage, renderedLayers, baselineJitterMap, differenceBlendLayers);
           }
           
           drawElement(renderObject, index, layers.length);

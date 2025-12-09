@@ -145,18 +145,32 @@ const solanaMetadata = {
  * ============================================================================
  */
 
+// Layer scrambling configuration
+// Set to true to enable layer scrambling (randomizing z-order)
+const scrambleLayers = true;
+// Array of layer names to scramble. Empty array = scramble all layers (except Background if background.generate is true)
+// Example: ["head", "left eye", "right eye"] - only scramble these layers
+const scrambleLayerNames = ["left eye", "right eye", "hat", "Mouth", "nose"];
+// If true, layers with anchorTo dependencies will maintain their relative order
+// If false, all specified layers will be scrambled completely randomly
+const respectAnchorDependencies = false;
+
 const layerConfigurations = [
   {
-    growEditionSizeTo: 55,
-     layersOrder: [
+    growEditionSizeTo: 44,
+    // Layer scrambling options (can override global defaults)
+    scrambleLayers: scrambleLayers, // Override global scrambleLayers setting
+    scrambleLayerNames: scrambleLayerNames, // Override global scrambleLayerNames setting
+    respectAnchorDependencies: respectAnchorDependencies, // Override global respectAnchorDependencies setting
+    layersOrder: [
       // Background layer - full canvas
       { 
         name: "Background", 
         options: { 
           x: 0, 
           y: 0, 
-          width: 1024, 
-          height: 1024,
+          width: 1000, 
+          height: 1000,
           randomRotate: false,
           rotateRange: 0.3,
           randomScale: false,
@@ -168,13 +182,7 @@ const layerConfigurations = [
       { 
         name: "banner ads", 
         options: { 
-          x: 0, 
-          y: 0, 
-          width: 1024, 
-          height: 1024,
           maintainAspectRatio: true,
-          randomPosition: false,
-          positionJitter: 0,
           randomRotate: false,
           rotateRange: 0,
           randomScale: false,
@@ -185,42 +193,35 @@ const layerConfigurations = [
         } 
       },
     
-      // Head layer 1 - Background layer (largest) - drawn first, appears behind
-      // Positioned with absolute coordinates to create progressive overlap
-      { 
-        name: "head", 
-        options: {
-          displayName: "head3",  // Different name so it doesn't overwrite main "head"
-          x: 12,  // Adjusted position: centered better for larger size
-          y: 0,  // Adjusted position: centered better for larger size
-          width: 1000, 
-          height: 1100,
-          maintainAspectRatio: true,  // Preserve aspect ratio to prevent stretching
-          randomPosition: false,
-          positionJitter: 25,
-          randomRotate: false,
-          rotateRange: 0.1,
-          randomScale: false,
-          scaleRange: [0.95, 1.05],
-          randomOpacity: false,
-          opacity: 1.0,
-          randomBlend: false,
-        } 
-      },
+      // // Head layer 1 - Background layer (largest) - drawn first, appears behind
+      // // Positioned with absolute coordinates to create progressive overlap
+      // { 
+      //   name: "head", 
+      //   options: {
+      //     displayName: "head3",  // Different name so it doesn't overwrite main "head"
+      //     x: 12,  // Adjusted position: centered better for larger size
+      //     y: 0,  // Adjusted position: centered better for larger size
+      //     width: 1000, 
+      //     height: 1100,
+      //     maintainAspectRatio: true,  // Preserve aspect ratio to prevent stretching
+      //     randomPosition: false,
+      //     positionJitter: 25,
+      //     randomRotate: false,
+      //     rotateRange: 0.1,
+      //     randomScale: false,
+      //     scaleRange: [0.95, 1.05],
+      //     randomOpacity: false,
+      //     opacity: 1.0,
+      //     randomBlend: false,
+      //   } 
+      // },
     
       // Head layer 2 - Middle layer (medium size) - drawn second, appears in middle
-      // Positioned with absolute coordinates to create progressive overlap
       { 
         name: "head", 
         options: {
           displayName: "head2",  // Different name so it doesn't overwrite main "head"
-          x: 82,  // Adjusted position: centered better for larger size
-          y: 50,   // Adjusted position: centered better for larger size
-          width: 860, 
-          height: 980,
           maintainAspectRatio: true,  // Preserve aspect ratio to prevent stretching
-          randomPosition: false,
-          positionJitter: 25,
           randomRotate: false,
           rotateRange: 0.1,
           randomScale: false,
@@ -232,19 +233,11 @@ const layerConfigurations = [
       },
     
       // Head layer 3 - Foreground layer (smallest) - drawn last, appears on top
-      // This is the main reference head that other layers anchor to
-      // Must be stored as "head" so other layers can find it
       { 
         name: "head",  // Still uses layers/head/ folder
         options: {
-          displayName: "head1",  // Store as "head1" so other layers can anchor to it
-          x: 137,  // Adjusted position: centered better for larger size
-          y: 87,  // Adjusted position: centered better for larger size
-          width: 750, 
-          height: 860,
+          displayName: "head1",
           maintainAspectRatio: true,  // Preserve aspect ratio to prevent stretching
-          randomPosition: false,
-          positionJitter: 25,
           randomRotate: false,
           rotateRange: 0.1,
           randomScale: false,
@@ -255,32 +248,32 @@ const layerConfigurations = [
         } 
       },
     
-      // Hair - positioned on top of head (same position as hat)
-      // Mutually exclusive with hat (hair 10%, hat 90%)
-      {
-        name: "hair",
-        options: {
-          probability: 0.1, // 10% chance of appearing (mutually exclusive with hat)
-          anchorTo: "head1",  // Anchor to the smallest head (foreground layer)
-          anchorPoint: "bounds-top",  // Use top of smallest head's bounding box
-          align: "bounds-center",  // Align center of hair's bounding box to center of head
-          offsetX: 0,  // Centered horizontally
-          offsetY: 200,  // Push hair down so it sits on the head (positive = down)
-          width: 1035,  // Scaled up to match larger head
-          height: 1035,  // Scaled up to match larger head
-          maintainAspectRatio: true,  // Preserve aspect ratio
-          useBounds: true,  // Use bounding box for precise positioning
-          randomPosition: false,
-          positionJitter: 15,
-          randomRotate: false,
-          rotateRange: 0.08,
-          randomScale: false,
-          scaleRange: [0.95, 1.05],
-          randomOpacity: false,
-          opacity: 1.0,
-          randomBlend: false,
-        },
-      },
+      // // Hair - positioned on top of head (same position as hat)
+      // // Mutually exclusive with hat (hair 10%, hat 90%)
+      // {
+      //   name: "hair",
+      //   options: {
+      //     probability: 0.1, // 10% chance of appearing (mutually exclusive with hat)
+      //     anchorTo: "head1",  // Anchor to the smallest head (foreground layer)
+      //     anchorPoint: "bounds-top",  // Use top of smallest head's bounding box
+      //     align: "bounds-center",  // Align center of hair's bounding box to center of head
+      //     offsetX: 0,  // Centered horizontally
+      //     offsetY: 200,  // Push hair down so it sits on the head (positive = down)
+      //     width: 1035,  // Scaled up to match larger head
+      //     height: 1035,  // Scaled up to match larger head
+      //     maintainAspectRatio: true,  // Preserve aspect ratio
+      //     useBounds: true,  // Use bounding box for precise positioning
+      //     randomPosition: false,
+      //     positionJitter: 15,
+      //     randomRotate: false,
+      //     rotateRange: 0.08,
+      //     randomScale: false,
+      //     scaleRange: [0.95, 1.05],
+      //     randomOpacity: false,
+      //     opacity: 1.0,
+      //     randomBlend: false,
+      //   },
+      // },
     
       // // Left ear - positioned on the left side of head, vertically centered
       // // Uses bounding box of non-transparent pixels for precise positioning
@@ -335,47 +328,36 @@ const layerConfigurations = [
       // },
     
       // Left eye layer 1 - Background layer (largest)
-      { 
-        name: "left eye", 
-        options: { 
-          anchorTo: "head1",
-          anchorPoint: "bounds-top",       // Use bounding box top center of head's actual content
-          align: "bounds-center",         // Align using bounding box center of eye's actual content
-          offsetX: -125,                  // Offset to the left of center (centered on head1 with right eye)
-          offsetY: 200,                   // Offset down from top (~1/3 of head height)
-          useActualDimensions: true,      // Use actual image size - adapts to each asset
-          useBounds: true,                 // Enable bounding box-based positioning
-          constrainToBounds: "head",     // Keep within head's bounding box
-          maxWidth: 950,                  // Max width constraint - largest (scaled up more)
-          maxHeight: 950,                 // Max height constraint - largest (scaled up more)
-          randomPosition: false,
-          positionJitter: 15,
-          randomRotate: false,
-          rotateRange: 0.262,
-          randomScale: false,
-          scaleRange: [0.9, 1.1],
-          randomOpacity: false,
-          opacity: 1.0,
-          randomBlend: false,
-        } 
-      },
+      // { 
+      //   name: "left eye", 
+      //   options: { 
+      //     anchorTo: "head1",
+      //     anchorPoint: "bounds-top",       // Use bounding box top center of head's actual content
+      //     align: "bounds-center",         // Align using bounding box center of eye's actual content
+      //     offsetX: -125,                  // Offset to the left of center (centered on head1 with right eye)
+      //     offsetY: 200,                   // Offset down from top (~1/3 of head height)
+      //     useActualDimensions: true,      // Use actual image size - adapts to each asset
+      //     useBounds: true,                 // Enable bounding box-based positioning
+      //     constrainToBounds: "head",     // Keep within head's bounding box
+      //     maxWidth: 950,                  // Max width constraint - largest (scaled up more)
+      //     maxHeight: 950,                 // Max height constraint - largest (scaled up more)
+      //     randomPosition: false,
+      //     positionJitter: 15,
+      //     randomRotate: false,
+      //     rotateRange: 0.262,
+      //     randomScale: false,
+      //     scaleRange: [0.9, 1.1],
+      //     randomOpacity: false,
+      //     opacity: 1.0,
+      //     randomBlend: false,
+      //   } 
+      // },
     
       // Left eye layer 2 - Middle layer (medium size)
       { 
         name: "left eye", 
         options: { 
-          anchorTo: "head1",
-          anchorPoint: "bounds-top",       // Use bounding box top center of head's actual content
-          align: "bounds-center",         // Align using bounding box center of eye's actual content
-          offsetX: -125,                  // Offset to the left of center (centered on head1 with right eye)
-          offsetY: 200,                   // Offset down from top (~1/3 of head height)
           useActualDimensions: true,      // Use actual image size - adapts to each asset
-          useBounds: true,                 // Enable bounding box-based positioning
-          constrainToBounds: "head",     // Keep within head's bounding box
-          maxWidth: 800,                  // Max width constraint - medium (scaled up more)
-          maxHeight: 800,                 // Max height constraint - medium (scaled up more)
-          randomPosition: false,
-          positionJitter: 15,
           randomRotate: false,
           rotateRange: 0.262,
           randomScale: false,
@@ -390,18 +372,7 @@ const layerConfigurations = [
       { 
         name: "left eye", 
         options: { 
-          anchorTo: "head1",
-          anchorPoint: "bounds-top",       // Use bounding box top center of head's actual content
-          align: "bounds-center",         // Align using bounding box center of eye's actual content
-          offsetX: -125,                  // Offset to the left of center (centered on head1 with right eye)
-          offsetY: 200,                   // Offset down from top (~1/3 of head height)
           useActualDimensions: true,      // Use actual image size - adapts to each asset
-          useBounds: true,                 // Enable bounding box-based positioning
-          constrainToBounds: "head",     // Keep within head's bounding box
-          maxWidth: 650,                  // Max width constraint - smallest (scaled up more)
-          maxHeight: 650,                 // Max height constraint - smallest (scaled up more)
-          randomPosition: false,
-          positionJitter: 15,
           randomRotate: false,
           rotateRange: 0.262,
           randomScale: false,
@@ -412,50 +383,38 @@ const layerConfigurations = [
         } 
       },
     
-      // Right eye layer 1 - Background layer (largest)
-      { 
-        name: "right eye", 
-        options: { 
-          anchorTo: "left eye",
-          anchorPoint: "bounds-center",    // Use bounding box center of left eye
-          align: "bounds-center",         // Align using bounding box center of right eye
-          offsetX: 280,                    // Absolute 280px horizontal distance between bounding box centers (increased from 250)
-          offsetY: 0,                      // Same vertical level (centers aligned horizontally)
-          useActualDimensions: true,      // Use actual image size
-          useBounds: true,                 // Use bounding box centers for positioning
-          constrainToBounds: "head",      // Keep within head's bounding box
-          maxWidth: 750,                  // Max constraints maintain aspect ratio - largest (scaled up)
-          maxHeight: 750,
-          randomPosition: false,
-          positionJitter: 15,
-          baselineJitter: 50,             // Random vertical baseline offset (±25px, 0-50px range)
-          randomRotate: false,
-          rotateRange: 0.262,
-          randomScale: false,
-          scaleRange: [0.9, 1.1],
-          randomOpacity: false,
-          opacity: 1.0,
-          randomBlend: false,
-        } 
-      },
+      // // Right eye layer 1 - Background layer (largest)
+      // { 
+      //   name: "right eye", 
+      //   options: { 
+      //     anchorTo: "left eye",
+      //     anchorPoint: "bounds-center",    // Use bounding box center of left eye
+      //     align: "bounds-center",         // Align using bounding box center of right eye
+      //     offsetX: 280,                    // Absolute 280px horizontal distance between bounding box centers (increased from 250)
+      //     offsetY: 0,                      // Same vertical level (centers aligned horizontally)
+      //     useActualDimensions: true,      // Use actual image size
+      //     useBounds: true,                 // Use bounding box centers for positioning
+      //     constrainToBounds: "head",      // Keep within head's bounding box
+      //     maxWidth: 750,                  // Max constraints maintain aspect ratio - largest (scaled up)
+      //     maxHeight: 750,
+      //     randomPosition: false,
+      //     positionJitter: 15,
+      //     baselineJitter: 50,             // Random vertical baseline offset (±25px, 0-50px range)
+      //     randomRotate: false,
+      //     rotateRange: 0.262,
+      //     randomScale: false,
+      //     scaleRange: [0.9, 1.1],
+      //     randomOpacity: false,
+      //     opacity: 1.0,
+      //     randomBlend: false,
+      //   } 
+      // },
     
       // Right eye layer 2 - Middle layer (medium size)
       { 
         name: "right eye", 
         options: { 
-          anchorTo: "left eye",
-          anchorPoint: "bounds-center",    // Use bounding box center of left eye
-          align: "bounds-center",         // Align using bounding box center of right eye
-          offsetX: 280,                    // Absolute 280px horizontal distance between bounding box centers (increased from 250)
-          offsetY: 0,                      // Same vertical level (centers aligned horizontally)
           useActualDimensions: true,      // Use actual image size
-          useBounds: true,                 // Use bounding box centers for positioning
-          constrainToBounds: "head",      // Keep within head's bounding box
-          maxWidth: 630,                  // Max constraints maintain aspect ratio - medium (scaled up)
-          maxHeight: 630,
-          randomPosition: false,
-          positionJitter: 15,
-          baselineJitter: 50,             // Random vertical baseline offset (±25px, 0-50px range)
           randomRotate: false,
           rotateRange: 0.262,
           randomScale: false,
@@ -470,19 +429,7 @@ const layerConfigurations = [
       { 
         name: "right eye", 
         options: { 
-          anchorTo: "left eye",
-          anchorPoint: "bounds-center",    // Use bounding box center of left eye
-          align: "bounds-center",         // Align using bounding box center of right eye
-          offsetX: 280,                    // Absolute 280px horizontal distance between bounding box centers (increased from 250)
-          offsetY: 0,                      // Same vertical level (centers aligned horizontally)
           useActualDimensions: true,      // Use actual image size
-          useBounds: true,                 // Use bounding box centers for positioning
-          constrainToBounds: "head",      // Keep within head's bounding box
-          maxWidth: 520,                  // Max constraints maintain aspect ratio - smallest (scaled up)
-          maxHeight: 520,
-          randomPosition: false,
-          positionJitter: 15,
-          baselineJitter: 50,             // Random vertical baseline offset (±25px, 0-50px range)
           randomRotate: false,
           rotateRange: 0.262,
           randomScale: false,
@@ -493,37 +440,20 @@ const layerConfigurations = [
         } 
       },
     
-      // Hat - positioned on top of head (drawn after eyes so it appears on top of them)
-      // Anchored to the smallest head (head1) - the foreground head layer
-      // Mutually exclusive with hair (hair 10%, hat 90%)
+      // Hat layer 2 - Middle layer (medium size) - drawn first, appears in middle
       {
         name: "hat",
         options: {
+          displayName: "hat2",  // Different name so it doesn't overwrite main "hat"
           // No probability here - hat appears if hair doesn't (handled by mutuallyExclusiveWith logic)
           mutuallyExclusiveWith: "hair", // Special flag: skip if hair was selected, otherwise always show
-          anchorTo: "head1",  // Anchor to the smallest head (foreground layer)
-          anchorPoint: "bounds-top",  // Use top of smallest head's bounding box
-          align: "bounds-bottom",  // Align bottom of hat's bounding box to top of head
-          offsetX: 0,  // Centered horizontally
-          offsetYPercent: 0.15,  // Push hat down proportionally to its height (positive = down, taller hats pushed down more)
-          // Filename-based offset overrides: maps filename patterns to specific offset percentages
-          // Values > 0.15 push the hat down more (more overlap with head)
-          // Values < 0.15 push the hat up (less overlap)
-          filenameOffsetYPercent: {
-            "crownofthorns": 0.4, 
-            "fern": 0.5,            
-            "guyfawkes": 0.20,
-            "marker": 0.33,
-            "spray": 0.5,
-            "strawberry": 0.7,
-            "orb": 0.5
+          // Filename-based size multipliers: maps filename patterns to size multipliers
+          filenameSizeMultipliers: {
+            // Add your filename patterns here, e.g.:
+            // "crownofthorns": 1.2,
+            // "orb": 0.9,
           },
-          width: 1035,  // Scaled up to match larger head
-          height: 1035,  // Scaled up to match larger head
           maintainAspectRatio: true,  // Preserve aspect ratio
-          useBounds: true,  // Use bounding box for precise positioning
-          randomPosition: false,
-          positionJitter: 15,
           randomRotate: false,
           rotateRange: 0.08,
           randomScale: false,
@@ -534,24 +464,14 @@ const layerConfigurations = [
         },
       },
     
-      // Hoodie - conditional layer, positioned around the smallest head layer
+      // Hat layer 1 - Foreground layer (smallest) - drawn last, appears on top
       {
-        name: "hoodie",
+        name: "hat",  // Still uses layers/hat/ folder
         options: {
-          probability: 0.0, // 0% chance of appearing
-          anchorTo: "head1", // Anchor to the smallest head layer (last one drawn with name "head")
-          anchorPoint: "bounds-center", // Use center of head's bounding box
-          align: "bounds-center", // Align center of hoodie to head center
-          offsetX: 0, // Centered horizontally
-          offsetY: 0, // Centered vertically
-          useActualDimensions: true, // Use actual image size
-          useBounds: true, // Use bounding box for precise positioning
-          maxWidth: 600, // Max width constraint - limit size relative to smallest head (550px)
-          maxHeight: 700, // Max height constraint - limit size relative to smallest head (650px)
-          randomPosition: false,
-          positionJitter: 10,
+          displayName: "hat1",
+          maintainAspectRatio: true,  // Preserve aspect ratio
           randomRotate: false,
-          rotateRange: 0.05,
+          rotateRange: 0.08,
           randomScale: false,
           scaleRange: [0.95, 1.05],
           randomOpacity: false,
@@ -560,44 +480,23 @@ const layerConfigurations = [
         },
       },
     
-      // Mouth - positioned centered relative to head1 (drawn first, behind nose)
-      // Constrained to stay within head's bounding box
+      // Mouth layer 2 - Middle layer (medium size)
       { 
         name: "Mouth", 
         options: { 
-          anchorTo: "head1",              // Anchor to smallest head (foreground layer)
-          anchorPoint: "bounds-center",    // Use center of head1's bounding box
-          align: "bounds-top",             // Align top of mouth to anchor - keeps tops aligned regardless of size
-          offsetX: 0,                      // Centered horizontally on head
-          offsetY: 133,                      // Position below head center (adjusted for bounds-top alignment)
           useActualDimensions: true,      // Use actual mouth size
-          useBounds: true,                // Use bounds for precise positioning relative to actual content
-          constrainToBounds: "head",       // Keep within head's bounding box
-          maxWidth: 690,                  // Max constraints maintain aspect ratio (scaled up 50% from 460)
-          maxHeight: 518,                 // Scaled up 50% from 345 (345 * 1.5 = 517.5, rounded to 518)
           // Filename-based size multipliers: maps filename patterns to size multipliers
-          // Example: "lips.png" will be 1.5x bigger, "clip.png" will be 1.2x bigger
-          filenameSizeMultipliers: {
-            // Add your filename patterns here, e.g.:
-            "glasscrack": 2.333,   // Adjusted to maintain same effective size (3.5 / 1.5)
-            "hammock": 2.333,        // Adjusted to maintain same effective size (2.5 / 1.5)
-            "xmaslights": 2.0,     // Adjusted to maintain same effective size 
-            "napkin": 0.75,
-            "pepper": 0.75
-          },
-          // Filename-based constraint disabling: disables constrainToBounds for specific filenames
-          // Useful for large elements that should extend beyond normal bounds
-          filenameDisableConstraints: {
-            "glasscrack": false,  // Disable head bounds constraint for glasscrack.png
-          },
-          // Filename-based Y position shift: maps filename patterns to pixel offset values
-          // Positive values shift down, negative values shift up
-          filenameOffsetY: {
-            // Add your filename patterns here, e.g.:
-            "hammock": -100,  // Shift hammock.png up by 100 pixels
-          },
-          randomPosition: false,
-          positionJitter: 12,
+          // filenameSizeMultipliers: {
+          //   "glasscrack": 2.333,   // Adjusted to maintain same effective size (3.5 / 1.5)
+          //   "hammock": 2.333,        // Adjusted to maintain same effective size (2.5 / 1.5)
+          //   "xmaslights": 2.0,     // Adjusted to maintain same effective size 
+          //   "napkin": 1.5,
+          //   "pepper": 1.75,
+          //   "usb": 0.75,
+          //   "paper": 1.333,
+          //   "label": 1.333,
+          //   "tear": 2.333
+          // },
           randomRotate: false,
           rotateRange: 0.05,
           randomScale: false,
@@ -608,23 +507,26 @@ const layerConfigurations = [
         } 
       },
     
-      // Nose - positioned at center of head1's bounding box
-      // Constrained to stay within head's bounding box
+      // Mouth layer 1 - Foreground layer (smallest)
+      { 
+        name: "Mouth", 
+        options: { 
+          useActualDimensions: true,      // Use actual mouth size
+          randomRotate: false,
+          rotateRange: 0.05,
+          randomScale: false,
+          scaleRange: [0.95, 1.05],
+          randomOpacity: false,
+          opacity: 1.0,
+          randomBlend: false,
+        } 
+      },
+    
+      // Nose layer 2 - Middle layer (medium size)
       { 
         name: "nose", 
         options: { 
-          anchorTo: "head1",              // Anchor to smallest head (foreground layer)
-          anchorPoint: "bounds-center",   // Use center of head1's bounding box
-          align: "bounds-center",         // Align center of nose to center of head
-          offsetX: 0,                     // Centered horizontally on head
-          offsetY: 50,                    // Offset down from center (positive = down)
           useActualDimensions: true,      // Use actual nose size
-          useBounds: true,                // Use bounds for precise positioning relative to actual content
-          constrainToBounds: "head1",     // Keep within head1's bounding box
-          maxWidth: 630,                  // Max constraints maintain aspect ratio (scaled up)
-          maxHeight: 630,
-          randomPosition: false,
-          positionJitter: 12,
           randomRotate: false,
           rotateRange: 0.1,
           randomScale: false,
@@ -635,6 +537,36 @@ const layerConfigurations = [
         } 
       },
     
+      // Nose layer 1 - Foreground layer (smallest)
+      { 
+        name: "nose", 
+        options: { 
+          useActualDimensions: true,      // Use actual nose size
+          randomRotate: false,
+          rotateRange: 0.1,
+          randomScale: false,
+          scaleRange: [0.9, 1.1],
+          randomOpacity: false,
+          opacity: 1.0,
+          randomBlend: false,
+        } 
+      },
+
+      // Hoodie - conditional layer
+      {
+        name: "hoodie",
+        options: {
+          probability: 0.1, // 33.3% chance of appearing
+          useActualDimensions: true, // Use actual image size
+          randomRotate: false,
+          rotateRange: 0.05,
+          randomScale: false,
+          scaleRange: [0.95, 1.05],
+          randomOpacity: false,
+          opacity: 1.0,
+          randomBlend: false,
+        },
+      },
       // Props - decorative elements, positioned in bottom right corner
       // {
       //   name: "Prop",
@@ -701,8 +633,8 @@ const shuffleLayerConfigurations = false;
 const debugLogs = false;
 
 const format = {
-  width: 1024,
-  height: 1024,
+  width: 1000,
+  height: 1000,
   smoothing: true,
 };
 
@@ -775,6 +707,9 @@ module.exports = {
   rarityDelimiter,
   preview,
   shuffleLayerConfigurations,
+  scrambleLayers,
+  scrambleLayerNames,
+  respectAnchorDependencies,
   debugLogs,
   extraMetadata,
   pixelFormat,
