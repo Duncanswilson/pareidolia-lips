@@ -2,9 +2,9 @@
   "name": "Your Collection #5",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/5.png",
-  "dna": "49469f99e3ef4cefecb64bd9e9f5a715456fc99a",
+  "dna": "eb533ea4e870f96654b9989c45bc4239b652a3ff",
   "edition": 5,
-  "date": 1764640244138,
+  "date": 1765272568194,
   "attributes": [
     {
       "trait_type": "Background",
@@ -12,47 +12,55 @@
     },
     {
       "trait_type": "banner ads",
-      "value": "christian"
-    },
-    {
-      "trait_type": "head3",
-      "value": "backpack"
+      "value": "graveyard"
     },
     {
       "trait_type": "head2",
-      "value": "coconut"
+      "value": "backpack"
     },
     {
       "trait_type": "head1",
-      "value": "mask"
+      "value": "rock"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "napkin mouth"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "leaf2"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "lure"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "hole2"
+    },
+    {
+      "trait_type": "hat2",
+      "value": "marker"
+    },
+    {
+      "trait_type": "hat1",
+      "value": "crownofthorns"
+    },
+    {
+      "trait_type": "nose",
+      "value": "tea"
     },
     {
       "trait_type": "left eye",
       "value": "window_black"
     },
     {
-      "trait_type": "left eye",
-      "value": "window"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "kenny"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "hexscrew"
-    },
-    {
-      "trait_type": "hat",
-      "value": "strawberry"
-    },
-    {
-      "trait_type": "Mouth",
-      "value": "pepper_mouth"
-    },
-    {
       "trait_type": "nose",
-      "value": "latch"
+      "value": "cantab"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "screw"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

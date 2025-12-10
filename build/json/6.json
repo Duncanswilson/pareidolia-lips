@@ -2,57 +2,65 @@
   "name": "Your Collection #6",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/6.png",
-  "dna": "206d81a585784288100b5f14d1dbb7a99d1357cb",
+  "dna": "2c2d91266fb4869705a4c9f770655de7c868083c",
   "edition": 6,
-  "date": 1764640245311,
+  "date": 1765272569041,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "Unknown-40"
+      "value": "Unknown-63"
     },
     {
       "trait_type": "banner ads",
-      "value": "adopt"
-    },
-    {
-      "trait_type": "head3",
-      "value": "foil"
+      "value": "notmilk"
     },
     {
       "trait_type": "head2",
-      "value": "coconut"
+      "value": "plastic bag"
     },
     {
       "trait_type": "head1",
-      "value": "leaf"
-    },
-    {
-      "trait_type": "left eye",
-      "value": "frozenlake"
-    },
-    {
-      "trait_type": "left eye",
-      "value": "rustedlens"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "window1"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "woodknot"
-    },
-    {
-      "trait_type": "hat",
-      "value": "guyfawkes"
+      "value": "lid"
     },
     {
       "trait_type": "Mouth",
-      "value": "xmaslights"
+      "value": "leaf2"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "amazon"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "window"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "lure"
+    },
+    {
+      "trait_type": "hat2",
+      "value": "napkin"
+    },
+    {
+      "trait_type": "hat1",
+      "value": "wheat"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "boo"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "kenny"
     },
     {
       "trait_type": "nose",
-      "value": "metal ball"
+      "value": "kiss"
+    },
+    {
+      "trait_type": "nose",
+      "value": "bullet hole"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

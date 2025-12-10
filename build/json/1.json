@@ -2,57 +2,65 @@
   "name": "Your Collection #1",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/1.png",
-  "dna": "36a231f1601264bf4a141c11209d5fa73511688b",
+  "dna": "ed1da90add876c5ea7d39f8287ddbaedcc1b9cb5",
   "edition": 1,
-  "date": 1764640239522,
+  "date": 1765272564688,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "Unknown-63"
+      "value": "Unknown-52"
     },
     {
       "trait_type": "banner ads",
-      "value": "funcashmail"
-    },
-    {
-      "trait_type": "head3",
-      "value": "wall"
+      "value": "cds"
     },
     {
       "trait_type": "head2",
-      "value": "foil"
+      "value": "mask2"
     },
     {
       "trait_type": "head1",
-      "value": "lid"
-    },
-    {
-      "trait_type": "left eye",
-      "value": "glass hole"
-    },
-    {
-      "trait_type": "left eye",
-      "value": "screw"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "hole2"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "woodknot"
-    },
-    {
-      "trait_type": "hat",
-      "value": "fern"
+      "value": "leaf2"
     },
     {
       "trait_type": "Mouth",
-      "value": "facepaint"
+      "value": "boxcutter"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "frozenlake"
     },
     {
       "trait_type": "nose",
       "value": "tea"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "fortune"
+    },
+    {
+      "trait_type": "hat2",
+      "value": "tissue"
+    },
+    {
+      "trait_type": "hat1",
+      "value": "wheat"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "shell"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "dogs"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "hexscrew"
+    },
+    {
+      "trait_type": "nose",
+      "value": "lure"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

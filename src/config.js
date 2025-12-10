@@ -157,7 +157,7 @@ const respectAnchorDependencies = false;
 
 const layerConfigurations = [
   {
-    growEditionSizeTo: 44,
+    growEditionSizeTo: 444,
     // Layer scrambling options (can override global defaults)
     scrambleLayers: scrambleLayers, // Override global scrambleLayers setting
     scrambleLayerNames: scrambleLayerNames, // Override global scrambleLayerNames setting

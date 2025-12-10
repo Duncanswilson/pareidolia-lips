@@ -2,61 +2,65 @@
   "name": "Your Collection #2",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/2.png",
-  "dna": "e238e9bb4309017ea4c5b8248b9ff819dc26ef39",
+  "dna": "6d5aeaea2179317aeb3fa8eb0d6bbc69d1f6f820",
   "edition": 2,
-  "date": 1764640240778,
+  "date": 1765272565534,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "Unknown-59"
+      "value": "Unknown-66"
     },
     {
       "trait_type": "banner ads",
-      "value": "alamo cam"
-    },
-    {
-      "trait_type": "head3",
-      "value": "coconut"
+      "value": "goldclub"
     },
     {
       "trait_type": "head2",
-      "value": "plastic bag"
+      "value": "coconut"
     },
     {
       "trait_type": "head1",
-      "value": "lid"
-    },
-    {
-      "trait_type": "left eye",
-      "value": "terminator"
-    },
-    {
-      "trait_type": "left eye",
-      "value": "sun"
-    },
-    {
-      "trait_type": "left eye",
-      "value": "eyebrow"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "hole2"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "drain"
-    },
-    {
-      "trait_type": "hat",
-      "value": "fern"
+      "value": "balloon"
     },
     {
       "trait_type": "Mouth",
-      "value": "garage"
+      "value": "lotto"
     },
     {
       "trait_type": "nose",
-      "value": "cicada"
+      "value": "rock"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "screw"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "glass hole"
+    },
+    {
+      "trait_type": "hat2",
+      "value": "peel"
+    },
+    {
+      "trait_type": "hat1",
+      "value": "wheat"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "window_black"
+    },
+    {
+      "trait_type": "nose",
+      "value": "roach"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "bud"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "hexscrew"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

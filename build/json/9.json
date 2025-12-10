@@ -2,57 +2,65 @@
   "name": "Your Collection #9",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/9.png",
-  "dna": "d7fde1b709b55439ea1dd2bddb11b0a4c67ca209",
+  "dna": "9b3bc7f824b9e630747e8382d2cdf9da3a7c9d7b",
   "edition": 9,
-  "date": 1764640248878,
+  "date": 1765272571716,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "Unknown-55"
+      "value": "4"
     },
     {
       "trait_type": "banner ads",
-      "value": "russiangambling"
-    },
-    {
-      "trait_type": "head3",
-      "value": "can"
+      "value": "gay"
     },
     {
       "trait_type": "head2",
-      "value": "leaf"
+      "value": "foil"
     },
     {
       "trait_type": "head1",
-      "value": "backpack"
-    },
-    {
-      "trait_type": "left eye",
-      "value": "screw"
+      "value": "basketball"
     },
     {
       "trait_type": "left eye",
       "value": "window"
     },
     {
-      "trait_type": "right eye",
-      "value": "woodknot"
-    },
-    {
-      "trait_type": "right eye",
-      "value": "window1"
-    },
-    {
-      "trait_type": "hat",
-      "value": "crownofthorns"
+      "trait_type": "Mouth",
+      "value": "bench"
     },
     {
       "trait_type": "Mouth",
-      "value": "pepper_mouth"
+      "value": "leaf"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "frozenlake"
+    },
+    {
+      "trait_type": "hat2",
+      "value": "spray"
+    },
+    {
+      "trait_type": "hat1",
+      "value": "fern"
     },
     {
       "trait_type": "nose",
-      "value": "drop"
+      "value": "roach"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "foil"
+    },
+    {
+      "trait_type": "nose",
+      "value": "bullet hole"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "x"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"

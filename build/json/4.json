@@ -2,57 +2,69 @@
   "name": "Your Collection #4",
   "description": "Remember to replace this description",
   "image": "ipfs://NewUriToReplace/4.png",
-  "dna": "9b6d9db33f61d72846cc038aa614fe031d2398fd",
+  "dna": "d6209ea1e0d3ef13bae205cab1c1efc8b3034163",
   "edition": 4,
-  "date": 1764640243010,
+  "date": 1765272567302,
   "attributes": [
     {
       "trait_type": "Background",
-      "value": "Unknown-52"
+      "value": "incel"
     },
     {
       "trait_type": "banner ads",
-      "value": "missing"
-    },
-    {
-      "trait_type": "head3",
-      "value": "trash"
+      "value": "starluckcasino"
     },
     {
       "trait_type": "head2",
-      "value": "outlet"
+      "value": "lid"
     },
     {
       "trait_type": "head1",
-      "value": "clipart_egg"
+      "value": "hood"
     },
     {
-      "trait_type": "left eye",
-      "value": "frozenlake"
+      "trait_type": "Mouth",
+      "value": "sponge"
     },
     {
-      "trait_type": "left eye",
-      "value": "screw"
+      "trait_type": "Mouth",
+      "value": "pepper_mouth"
     },
     {
-      "trait_type": "right eye",
-      "value": "kenny"
+      "trait_type": "nose",
+      "value": "butterfly"
     },
     {
       "trait_type": "right eye",
       "value": "drain"
     },
     {
-      "trait_type": "hat",
-      "value": "crownofthorns"
+      "trait_type": "hat2",
+      "value": "orb"
     },
     {
-      "trait_type": "Mouth",
-      "value": "napkin mouth"
+      "trait_type": "hat1",
+      "value": "guyfawkes"
     },
     {
       "trait_type": "nose",
-      "value": "drop"
+      "value": "penny"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "jar lid"
+    },
+    {
+      "trait_type": "left eye",
+      "value": "rustedlens"
+    },
+    {
+      "trait_type": "right eye",
+      "value": "hexscrew"
+    },
+    {
+      "trait_type": "hoodie",
+      "value": "hoodie"
     }
   ],
   "compiler": "HashLips Art Engine (collage mod)"
